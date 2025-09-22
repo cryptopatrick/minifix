@@ -19,12 +19,6 @@ fn main() -> io::Result<()> {
     codegen(Dictionary::fix43(), "fix43.rs")?;
     // FIX 4.4 is always enabled.
     codegen(Dictionary::fix44(), "fix44.rs")?;
-    #[cfg(feature = "fix50")]
-    codegen(Dictionary::fix50(), "fix50.rs")?;
-    #[cfg(feature = "fix50sp1")]
-    codegen(Dictionary::fix50sp1(), "fix50sp1.rs")?;
-    #[cfg(feature = "fix50sp2")]
-    codegen(Dictionary::fix50sp2(), "fix50sp2.rs")?;
     #[cfg(feature = "fixt11")]
     codegen(Dictionary::fixt11(), "fixt11.rs")?;
     Ok(())

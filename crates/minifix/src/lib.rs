@@ -25,7 +25,7 @@
 //! MiniFixRust puts a lot of functionality behind optional features in order to
 //! optimize compilation times. The following features are available:
 //!
-//! ### `fix40`, `fix41`, `fix42`, `fix43`, `fix44`, `fix50`, `fix50sp1`, `fix50sp2`, `fixt11`
+//! ### `fix40`, `fix41`, `fix42`, `fix43`, `fix44`, `fixt11`
 //!
 //! Version-specific FIX utilities. See the modules within [`definitions`] and
 //! the similarly named [`Dictionary`] methods.

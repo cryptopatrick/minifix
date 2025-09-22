@@ -173,29 +173,8 @@ impl Dictionary {
         Dictionary::from_quickfix_spec(spec).unwrap()
     }
 
-    /// Creates a new [`Dictionary`] for FIX 5.0.
-    #[cfg(feature = "fix50")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "fix50")))]
-    pub fn fix50() -> Self {
-        let spec = include_str!("resources/quickfix/FIX-5.0.xml");
-        Dictionary::from_quickfix_spec(spec).unwrap()
-    }
 
-    /// Creates a new [`Dictionary`] for FIX 5.0 SP1.
-    #[cfg(feature = "fix50sp1")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "fix50sp1")))]
-    pub fn fix50sp1() -> Self {
-        let spec = include_str!("resources/quickfix/FIX-5.0-SP1.xml");
-        Dictionary::from_quickfix_spec(spec).unwrap()
-    }
 
-    /// Creates a new [`Dictionary`] for FIX 5.0 SP2.
-    #[cfg(feature = "fix50sp2")]
-    #[cfg_attr(doc_cfg, doc(cfg(feature = "fix50sp1")))]
-    pub fn fix50sp2() -> Self {
-        let spec = include_str!("resources/quickfix/FIX-5.0-SP2.xml");
-        Dictionary::from_quickfix_spec(spec).unwrap()
-    }
 
     /// Creates a new [`Dictionary`] for FIXT 1.1.
     #[cfg(feature = "fixt11")]
@@ -218,14 +197,7 @@ impl Dictionary {
             Self::fix42(),
             #[cfg(feature = "fix43")]
             Self::fix43(),
-            #[cfg(feature = "fix44")]
             Self::fix44(),
-            #[cfg(feature = "fix50")]
-            Self::fix50(),
-            #[cfg(feature = "fix50sp1")]
-            Self::fix50sp1(),
-            #[cfg(feature = "fix50sp2")]
-            Self::fix50sp2(),
             #[cfg(feature = "fixt11")]
             Self::fixt11(),
         ]
@@ -520,9 +492,6 @@ impl<'a> Field<'a> {
             "FIX.4.2" => "4.2",
             "FIX.4.3" => "4.3",
             "FIX.4.4" => "4.4",
-            "FIX.5.0" => "5.0",
-            "FIX.5.0SP1" => "5.0.SP1",
-            "FIX.5.0SP2" => "5.0.SP2",
             "FIXT.1.1" => "FIXT.1.1",
             s => s,
         };

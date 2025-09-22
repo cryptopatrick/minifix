@@ -250,9 +250,6 @@ fn onixs_dictionary_id(fix_version: &str) -> Option<&str> {
         "FIX.4.2" => "4.2",
         "FIX.4.3" => "4.3",
         "FIX.4.4" => "4.4",
-        "FIX.5.0" => "5.0",
-        "FIX.5.0-SP1" => "5.0.sp1",
-        "FIX.5.0-SP2" => "5.0.sp2",
         "FIXT.1.1" => "fixt1.1",
         _ => return None,
     })

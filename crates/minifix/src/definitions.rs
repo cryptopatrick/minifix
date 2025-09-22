@@ -77,32 +77,8 @@ pub mod fix44 {
     include!(concat!(env!("OUT_DIR"), "/fix44.rs"));
 }
 
-#[cfg(feature = "fix50")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "fix50")))]
-#[allow(dead_code, unused, warnings)]
-#[rustfmt::skip]
-/// Field and message definitions for FIX.5.0.
-pub mod fix50 {
-    include!(concat!(env!("OUT_DIR"), "/fix50.rs"));
-}
 
-#[cfg(feature = "fix50sp1")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "fix50sp1")))]
-#[allow(dead_code, unused, warnings)]
-#[rustfmt::skip]
-/// Field and message definitions for FIX.5.0 SP1.
-pub mod fix50sp1 {
-    include!(concat!(env!("OUT_DIR"), "/fix50sp1.rs"));
-}
 
-#[cfg(feature = "fix50sp2")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "fix50sp2")))]
-#[allow(dead_code, unused, warnings)]
-#[rustfmt::skip]
-/// Field and message definitions for FIX.5.0 SP2.
-pub mod fix50sp2 {
-    include!(concat!(env!("OUT_DIR"), "/fix50sp2.rs"));
-}
 
 #[cfg(feature = "fixt11")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "fixt11")))]

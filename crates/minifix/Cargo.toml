@@ -34,9 +34,6 @@ fix40 = [ "minifix-dictionary/fix40" ]
 fix41 = [ "minifix-dictionary/fix41" ]
 fix42 = [ "minifix-dictionary/fix42" ]
 fix43 = [ "minifix-dictionary/fix43" ]
-fix50 = [ "minifix-dictionary/fix50" ]
-fix50sp1 = [ "minifix-dictionary/fix50sp1" ]
-fix50sp2 = [ "minifix-dictionary/fix50sp2" ]
 fixt11 = [ "minifix-dictionary/fixt11" ]
 # Third-party crate integration.
 utils-bytes = [ "bytes" ]
@@ -53,9 +50,6 @@ full = [
 	"fix41",
 	"fix42",
 	"fix43",
-	"fix50",
-	"fix50sp1",
-	"fix50sp2",
 	"fixt11",
 	"json-encoding",
 	"utils-bytes",
