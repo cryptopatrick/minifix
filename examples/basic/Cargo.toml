@@ -1,0 +1,7 @@
+[package]
+name = "basic_example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+minifix = { path = "../../crates/minifix", features = ["fix42", "fix43"] }

@@ -1,8 +1,13 @@
-[package]
+[workspace]
+members = ["crates/*", "examples/*", "tests/*"]
+resolver = "2"
+
+[workspace.package]
 name = "minifix"
 version = "0.1.0"
 edition = "2024"
 authors = ["CryptoPatrick <cryptopatrick@gmail.com>"]
+publish = true
 
 ###############################################################################
 description = "A bare essentials library for Financial Information Exchange (FIX)"
@@ -10,18 +15,17 @@ documentation = "https://docs.rs/minifix"
 homepage = "https://github.com/cryptopatrick/minifix"
 repository = "https://github.com/cryptopatrick/minifix"
 readme = "README.md"
-keywords = ["<KEYWORD1>", "<KEYWORD2>" ]
+keywords = ["fix"]
+categories = ["finance"]
 license = "MIT"
 autotests = false
 
 ###############################################################################
-[lib]
-name = "minifix"
-path = "src/lib.rs"
 
-[[test]]
-name = "tests"
-path = "tests/test.rs"
+[profile.release]
+lto = true
 
-###############################################################################
-[dependencies]
+[profile.dev.build-override]
+# Helps with compile times for macro-heavy code. 
+# See <https://corrode.dev/blog/tips-for-faster-rust-compile-times/.
+opt-level = 1

@@ -1,0 +1,11 @@
+[package]
+name = "test_codegen_fix44"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+minifix = { path = "../../crates/minifix", features = ["codegen"] }
+
+[build-dependencies]
+minifix = { path = "../../crates/minifix", features = ["codegen"] }

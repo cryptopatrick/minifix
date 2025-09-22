@@ -1,0 +1,11 @@
+# Folders
+target/
+_docs-vibe/
+_wb/
+
+# Files
+.claude
+.DS_Store
+CLAUDE.md
+claude.md
+Cargo.lock
