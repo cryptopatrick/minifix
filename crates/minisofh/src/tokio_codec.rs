@@ -37,20 +37,26 @@ impl codec::Decoder for TokioCodec {
     type Item = Frame<Bytes>;
     type Error = Error;
 
-    fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
+    fn decode(
+        &mut self,
+        src: &mut BytesMut,
+    ) -> Result<Option<Self::Item>, Self::Error> {
         match Header::from_bytes(src) {
             Ok(header) => {
                 let len = header.nominal_message_length_in_bytes;
                 if src.len() >= len {
                     let mut frame = src.split_to(len);
-                    let payload = frame.split_off(Header::LENGTH_IN_BYTES).freeze();
+                    let payload =
+                        frame.split_off(Header::LENGTH_IN_BYTES).freeze();
                     Ok(Some(Frame::new(header.encoding_type, payload)))
                 } else {
                     src.reserve(len - src.len());
                     Ok(None)
                 }
             }
-            Err(Error::InvalidMessageLength) => Err(Error::InvalidMessageLength),
+            Err(Error::InvalidMessageLength) => {
+                Err(Error::InvalidMessageLength)
+            }
             Err(Error::Incomplete { needed: _ }) => Ok(None),
             Err(Error::Io(_)) => panic!("Unexpected I/O error."),
         }
@@ -63,7 +69,11 @@ where
 {
     type Error = io::Error;
 
-    fn encode(&mut self, frame: Frame<T>, dst: &mut BytesMut) -> Result<(), Self::Error> {
+    fn encode(
+        &mut self,
+        frame: Frame<T>,
+        dst: &mut BytesMut,
+    ) -> Result<(), Self::Error> {
         let nominal_message_length_in_bytes =
             frame.payload().as_ref().len() + Header::LENGTH_IN_BYTES;
         let header = Header {

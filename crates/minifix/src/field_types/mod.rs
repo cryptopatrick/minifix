@@ -88,7 +88,7 @@ pub use timestamp::Timestamp;
 pub use tz::Tz;
 pub use tz_time::TzTime;
 pub use tz_timestamp::TzTimestamp;
-pub use validation_config::{TimeValidation, DateValidation, FieldLengths};
+pub use validation_config::{DateValidation, FieldLengths, TimeValidation};
 
 /// Type alias for ISO 3166-1 alpha-2 strings (two-letter country codes).
 pub type Country = [u8; 2];
@@ -98,7 +98,8 @@ pub type Currency = [u8; 3];
 /// ISO 10383.
 pub type Exchange = [u8; 4];
 
-pub(crate) const ERR_UTF8: &str = "Invalid byte sequence; expected UTF-8 valid bytes.";
+pub(crate) const ERR_UTF8: &str =
+    "Invalid byte sequence; expected UTF-8 valid bytes.";
 pub(crate) const ERR_INT_INVALID: &str = "Invalid integer digits.";
 pub(crate) const ERR_TIME: &str = "Invalid time.";
 #[cfg(any(feature = "utils-decimal", feature = "utils-rust-decimal"))]

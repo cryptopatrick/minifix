@@ -18,5 +18,6 @@ pub use crate::definitions::fix44;
 pub use crate::definitions::fixt11;
 pub use crate::dict::Dictionary;
 pub use crate::{
-    Buffer, FieldMap, FieldType, GetConfig, RepeatingGroup, SetField, StreamingDecoder, TagU32,
+    Buffer, FieldMap, FieldType, GetConfig, RepeatingGroup, SetField,
+    StreamingDecoder, TagU32,
 };

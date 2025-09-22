@@ -1,8 +1,10 @@
+use super::{DateValidation, FieldLengths};
+use crate::utils::encoding::{ascii_digit_to_u32, is_ascii_digit};
 use crate::{Buffer, FieldType};
 use std::convert::{TryFrom, TryInto};
-use super::{DateValidation, FieldLengths};
 
-const ERR_NOT_ASCII_DIGITS: &str = "Invalid characters, expected ASCII digits.";
+const ERR_NOT_ASCII_DIGITS: &str =
+    "Invalid characters, expected ASCII digits.";
 const ERR_LENGTH: &str = "Invalid length, expected 8 bytes (YYYYMMDD format).";
 const ERR_BOUNDS: &str = "Values outside legal bounds.";
 
@@ -43,9 +45,12 @@ impl Date {
     /// assert!(Date::new(2021, 2, 31).is_some());
     /// ```
     pub fn new(year: u32, month: u32, day: u32) -> Option<Self> {
-        if (DateValidation::YEAR_MIN..=DateValidation::YEAR_MAX).contains(&year)
-            && (DateValidation::MONTH_MIN..=DateValidation::MONTH_MAX).contains(&month)
-            && (DateValidation::DAY_MIN..=DateValidation::DAY_MAX).contains(&day)
+        if (DateValidation::YEAR_MIN..=DateValidation::YEAR_MAX)
+            .contains(&year)
+            && (DateValidation::MONTH_MIN..=DateValidation::MONTH_MAX)
+                .contains(&month)
+            && (DateValidation::DAY_MIN..=DateValidation::DAY_MAX)
+                .contains(&day)
         {
             Some(Self { year, month, day })
         } else {
@@ -111,7 +116,11 @@ impl Date {
     #[cfg(feature = "utils-chrono")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "utils-chrono")))]
     pub fn to_chrono_naive(&self) -> Option<chrono::NaiveDate> {
-        chrono::NaiveDate::from_ymd_opt(self.year() as i32, self.month(), self.day())
+        chrono::NaiveDate::from_ymd_opt(
+            self.year() as i32,
+            self.month(),
+            self.day(),
+        )
     }
 }
 
@@ -131,7 +140,7 @@ impl<'a> FieldType<'a> for Date {
     fn deserialize(data: &'a [u8]) -> Result<Self, Self::Error> {
         if let Ok(bytes) = <[u8; FieldLengths::DATE_BYTES]>::try_from(data) {
             for byte in bytes.iter().copied() {
-                if !is_digit(byte) {
+                if !is_ascii_digit(byte) {
                     return Err(ERR_NOT_ASCII_DIGITS);
                 }
             }
@@ -150,22 +159,17 @@ impl<'a> FieldType<'a> for Date {
     }
 }
 
-fn deserialize(data: [u8; FieldLengths::DATE_BYTES]) -> Result<Date, &'static str> {
+fn deserialize(
+    data: [u8; FieldLengths::DATE_BYTES],
+) -> Result<Date, &'static str> {
     let year = ascii_digit_to_u32(data[0], 1000)
         + ascii_digit_to_u32(data[1], 100)
         + ascii_digit_to_u32(data[2], 10)
         + ascii_digit_to_u32(data[3], 1);
-    let month = ascii_digit_to_u32(data[4], 10) + ascii_digit_to_u32(data[5], 1);
+    let month =
+        ascii_digit_to_u32(data[4], 10) + ascii_digit_to_u32(data[5], 1);
     let day = ascii_digit_to_u32(data[6], 10) + ascii_digit_to_u32(data[7], 1);
     Date::new(year, month, day).ok_or(ERR_BOUNDS)
-}
-
-const fn is_digit(byte: u8) -> bool {
-    byte >= b'0' && byte <= b'9'
-}
-
-const fn ascii_digit_to_u32(digit: u8, multiplier: u32) -> u32 {
-    (digit as u32).wrapping_sub(b'0' as u32) * multiplier
 }
 
 #[cfg(test)]
@@ -233,7 +237,8 @@ mod test {
 
     #[quickcheck]
     fn new_via_getters(date: Date) -> bool {
-        let date_via_new = Date::new(date.year(), date.month(), date.day()).unwrap();
+        let date_via_new =
+            Date::new(date.year(), date.month(), date.day()).unwrap();
         date == date_via_new
     }
 

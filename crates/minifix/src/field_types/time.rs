@@ -1,7 +1,9 @@
-use crate::{Buffer, FieldType};
-use crate::utils::encoding::two_digits_to_ascii;
-use crate::utils::validation::validate_time_components;
 use super::FieldLengths;
+use crate::utils::encoding::{
+    ascii_digit_to_u32, is_ascii_digit, two_digits_to_ascii,
+};
+use crate::utils::validation::validate_time_components;
+use crate::{Buffer, FieldType};
 
 const ERR_INVALID: &str = "Invalid time.";
 
@@ -17,15 +19,14 @@ pub struct Time {
 
 impl Time {
     /// Creates a new time value from its components, with milliseconds.
-    pub fn from_hmsm(hour: u32, minute: u32, second: u32, milli: u32) -> Option<Self> {
-        if validate_time_components(hour, minute, second, milli)
-        {
-            Some(Self {
-                hour,
-                minute,
-                second,
-                milli,
-            })
+    pub fn from_hmsm(
+        hour: u32,
+        minute: u32,
+        second: u32,
+        milli: u32,
+    ) -> Option<Self> {
+        if validate_time_components(hour, minute, second, milli) {
+            Some(Self { hour, minute, second, milli })
         } else {
             None
         }
@@ -38,9 +39,15 @@ impl Time {
             let minute_digits = two_digits_to_ascii(self.minute());
             let second_digits = two_digits_to_ascii(self.second());
             [
-                hour_digits[0], hour_digits[1], b':',
-                minute_digits[0], minute_digits[1], b':',
-                second_digits[0], second_digits[1], b'.',
+                hour_digits[0],
+                hour_digits[1],
+                b':',
+                minute_digits[0],
+                minute_digits[1],
+                b':',
+                second_digits[0],
+                second_digits[1],
+                b'.',
                 (self.milli() / 100) as u8 + b'0',
                 ((self.milli() / 10) % 10) as u8 + b'0',
                 (self.milli() % 10) as u8 + b'0',
@@ -169,19 +176,14 @@ impl<'a> FieldType<'a> for Time {
         if !digits_are_ok {
             return Err(ERR_INVALID);
         }
-        let hour = ascii_digit_to_u32(data[0], 10) + ascii_digit_to_u32(data[1], 1);
-        let minute = ascii_digit_to_u32(data[3], 10) + ascii_digit_to_u32(data[4], 1);
-        let second = ascii_digit_to_u32(data[6], 10) + ascii_digit_to_u32(data[7], 1);
+        let hour =
+            ascii_digit_to_u32(data[0], 10) + ascii_digit_to_u32(data[1], 1);
+        let minute =
+            ascii_digit_to_u32(data[3], 10) + ascii_digit_to_u32(data[4], 1);
+        let second =
+            ascii_digit_to_u32(data[6], 10) + ascii_digit_to_u32(data[7], 1);
         Self::from_hmsm(hour, minute, second, milli).ok_or(ERR_INVALID)
     }
-}
-
-const fn is_ascii_digit(byte: u8) -> bool {
-    byte >= b'0' && byte <= b'9'
-}
-
-const fn ascii_digit_to_u32(digit: u8, multiplier: u32) -> u32 {
-    (digit as u32).wrapping_sub(b'0' as u32) * multiplier
 }
 
 #[cfg(test)]
@@ -200,7 +202,10 @@ mod test {
             } else {
                 String::new()
             };
-            let s = format!("{:02}:{:02}:{:02}{}", hour, minute, second, millisecond);
+            let s = format!(
+                "{:02}:{:02}:{:02}{}",
+                hour, minute, second, millisecond
+            );
             Self::deserialize(s.as_bytes()).unwrap()
         }
     }
@@ -221,13 +226,7 @@ mod test {
             second: u32,
             milli: u32,
         ) -> Self {
-            Self {
-                bytes,
-                hour,
-                minute,
-                second,
-                milli,
-            }
+            Self { bytes, hour, minute, second, milli }
         }
     }
 

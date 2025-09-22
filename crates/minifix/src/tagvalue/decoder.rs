@@ -1,8 +1,11 @@
 use super::{Config, DecodeError, RawDecoder, RawDecoderStreaming, RawFrame};
 use crate::dict::{FixDatatype, IsFieldDefinition};
+use crate::utils::parsing::{
+    find_equal_sign_from, find_separator_from, parse_decimal_ascii,
+};
 use crate::{
-    Buffer, Dictionary, FieldMap, FieldType, FieldValueError, GetConfig, RepeatingGroup,
-    StreamingDecoder, TagU32,
+    Buffer, Dictionary, FieldMap, FieldType, FieldValueError, GetConfig,
+    RepeatingGroup, StreamingDecoder, TagU32,
 };
 use nohash_hasher::IntMap;
 use std::collections::HashMap;
@@ -28,10 +31,7 @@ struct FieldLocator {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum FieldLocatorContext {
     TopLevel,
-    WithinGroup {
-        index_of_group_tag: u32,
-        entry_index: u32,
-    },
+    WithinGroup { index_of_group_tag: u32, entry_index: u32 },
 }
 
 // Number of bytes before the start of the `BeginString` field:
@@ -66,7 +66,9 @@ impl Decoder {
                         fix_type = FixDatatype::NumInGroup;
                     }
 
-                    if fix_type == FixDatatype::Length || fix_type == FixDatatype::NumInGroup {
+                    if fix_type == FixDatatype::Length
+                        || fix_type == FixDatatype::NumInGroup
+                    {
                         Some((field.tag().get(), fix_type))
                     } else {
                         None
@@ -83,11 +85,7 @@ impl Decoder {
     {
         let raw_decoder = self.raw_decoder.clone().streaming(buffer);
 
-        DecoderStreaming {
-            decoder: self,
-            raw_decoder,
-            is_ready: false,
-        }
+        DecoderStreaming { decoder: self, raw_decoder, is_ready: false }
     }
 
     /// Decodes `data` and returns an immutable reference to the obtained
@@ -106,7 +104,10 @@ impl Decoder {
     /// let message = decoder.decode(data).unwrap();
     /// assert_eq!(message.get(fix44::SENDER_COMP_ID), Ok("A"));
     /// ```
-    pub fn decode<T>(&mut self, bytes: T) -> Result<Message<'_, T>, DecodeError>
+    pub fn decode<T>(
+        &mut self,
+        bytes: T,
+    ) -> Result<Message<'_, T>, DecodeError>
     where
         T: AsRef<[u8]>,
     {
@@ -118,7 +119,10 @@ impl Decoder {
         unsafe { std::mem::transmute(&mut self.builder) }
     }
 
-    fn from_frame<T>(&mut self, frame: RawFrame<T>) -> Result<Message<'_, T>, DecodeError>
+    fn from_frame<T>(
+        &mut self,
+        frame: RawFrame<T>,
+    ) -> Result<Message<'_, T>, DecodeError>
     where
         T: AsRef<[u8]>,
     {
@@ -134,39 +138,31 @@ impl Decoder {
         )?;
         let mut i = 0;
         while i < payload.len() {
-            let index_of_next_equal_sign = {
-                let i_eq = payload[i..]
-                    .iter()
-                    .copied()
-                    .position(|byte| byte == b'=')
-                    .map(|pos| pos + i);
-                if i_eq.is_none() {
-                    break;
-                }
-                i_eq.unwrap()
-            };
-            let field_value_len = if let Some(len) = self.builder.state.data_field_length {
+            let index_of_next_equal_sign =
+                match find_equal_sign_from(payload, i) {
+                    Some(pos) => pos,
+                    None => break,
+                };
+            let field_value_len = if let Some(len) =
+                self.builder.state.data_field_length
+            {
                 self.builder.state.data_field_length = None;
                 len
             } else {
-                let len = payload[index_of_next_equal_sign + 1..]
-                    .iter()
-                    .copied()
-                    .position(|byte| byte == separator);
-                if len.is_none() {
-                    break;
+                match find_separator_from(
+                    payload,
+                    separator,
+                    index_of_next_equal_sign + 1,
+                ) {
+                    Some(sep_pos) => sep_pos - (index_of_next_equal_sign + 1),
+                    None => break,
                 }
-                len.unwrap()
             };
             let tag_num = {
-                let mut tag = 0u32;
-                for byte in payload[i..index_of_next_equal_sign].iter().copied() {
-                    tag = tag * 10 + (byte as u32 - b'0' as u32);
-                }
-                if let Some(tag) = TagU32::new(tag) {
-                    tag
-                } else {
-                    break;
+                let tag_bytes = &payload[i..index_of_next_equal_sign];
+                match parse_decimal_ascii(tag_bytes).and_then(TagU32::new) {
+                    Some(tag) => tag,
+                    None => break,
                 }
             };
             self.store_field(
@@ -202,7 +198,9 @@ impl Decoder {
             // We are entering a new group, but we still don't know which tag
             // will be the first one in each entry.
             self.builder.state.set_new_group(tag);
-        } else if let Some(group_info) = self.builder.state.group_information.last_mut() {
+        } else if let Some(group_info) =
+            self.builder.state.group_information.last_mut()
+        {
             if group_info.current_entry_i >= group_info.num_entries {
                 self.builder.state.group_information.pop();
             } else if tag == group_info.first_tag_of_every_group_entry {
@@ -218,9 +216,11 @@ impl Decoder {
             .map_err(|e| DecodeError::Invalid)?;
         let fix_type = self.tag_lookup.get(&tag.get());
         if fix_type == Some(&FixDatatype::NumInGroup) {
-            self.builder
-                .state
-                .add_group(tag, self.builder.field_locators.len() - 1, field_value);
+            self.builder.state.add_group(
+                tag,
+                self.builder.field_locators.len() - 1,
+                field_value,
+            );
         } else if fix_type == Some(&FixDatatype::Length) {
             // TODO: Handle Length field data validation
             let last_field_locator = self
@@ -234,8 +234,10 @@ impl Decoder {
                 .get(last_field_locator)
                 .ok_or(DecodeError::FieldPresence)?;
             let last_field_value = last_field.1;
-            let s = std::str::from_utf8(last_field_value).map_err(|_| DecodeError::Invalid)?;
-            let data_field_length = str::parse(s).map_err(|_| DecodeError::Invalid)?;
+            let s = std::str::from_utf8(last_field_value)
+                .map_err(|_| DecodeError::Invalid)?;
+            let data_field_length =
+                str::parse(s).map_err(|_| DecodeError::Invalid)?;
             self.builder.state.data_field_length = Some(data_field_length);
         }
         Ok(())
@@ -399,10 +401,7 @@ impl<'a, T> Message<'a, T> {
     /// assert_eq!(first_field, Some((TagU32::new(8).unwrap(), b"FIX.4.4" as &[u8])));
     /// ```
     pub fn fields(&'a self) -> Fields<'a, T> {
-        Fields {
-            message: self,
-            i: 0,
-        }
+        Fields { message: self, i: 0 }
     }
 
     /// Returns the underlying byte contents of `self`.
@@ -504,7 +503,12 @@ impl DecoderState {
         });
     }
 
-    fn add_group(&mut self, tag: TagU32, index_of_group_tag: usize, field_value: &[u8]) {
+    fn add_group(
+        &mut self,
+        tag: TagU32,
+        index_of_group_tag: usize,
+        field_value: &[u8],
+    ) {
         let field_value_str = std::str::from_utf8(field_value).unwrap();
         let num_entries = str::parse(field_value_str).unwrap();
         if num_entries > 0 {
@@ -610,18 +614,21 @@ where
 {
     type Group = MessageGroup<'a, T>;
 
-    fn group(&self, tag: u32) -> Result<Self::Group, FieldValueError<<usize as FieldType>::Error>> {
+    fn group(
+        &self,
+        tag: u32,
+    ) -> Result<Self::Group, FieldValueError<<usize as FieldType>::Error>>
+    {
         let tag = TagU32::new(tag).ok_or(FieldValueError::Missing)?;
-        let field_locator_of_group_tag = FieldLocator {
-            tag,
-            context: self.field_locator_context,
-        };
+        let field_locator_of_group_tag =
+            FieldLocator { tag, context: self.field_locator_context };
         let num_in_group = self
             .builder
             .fields
             .get(&field_locator_of_group_tag)
             .ok_or(FieldValueError::Missing)?;
-        let num_entries = usize::deserialize(num_in_group.1).map_err(FieldValueError::Invalid)?;
+        let num_entries = usize::deserialize(num_in_group.1)
+            .map_err(FieldValueError::Invalid)?;
         let index_of_group_tag = num_in_group.2 as u32;
         Ok(MessageGroup {
             message: Message {
@@ -636,10 +643,8 @@ where
 
     fn get_raw(&self, tag: u32) -> Option<&[u8]> {
         let tag = TagU32::new(tag)?;
-        let field_locator = FieldLocator {
-            tag,
-            context: self.field_locator_context,
-        };
+        let field_locator =
+            FieldLocator { tag, context: self.field_locator_context };
         dbglog!("looking for {:?}", field_locator);
         self.builder.fields.get(&field_locator).map(|field| field.1)
     }
@@ -655,7 +660,8 @@ where
     fn group(
         &self,
         field: &F,
-    ) -> Result<Self::Group, FieldValueError<<usize as FieldType>::Error>> {
+    ) -> Result<Self::Group, FieldValueError<<usize as FieldType>::Error>>
+    {
         self.group(field.tag().get())
     }
 
@@ -734,7 +740,8 @@ mod test {
 
     #[test]
     fn can_parse_simple_message() {
-        let message = "8=FIX.4.2|9=40|35=D|49=AFUNDMGR|56=ABROKER|15=USD|59=0|10=091|";
+        let message =
+            "8=FIX.4.2|9=40|35=D|49=AFUNDMGR|56=ABROKER|15=USD|59=0|10=091|";
         let mut decoder = decoder();
         let result = decoder.decode(message.as_bytes());
         assert!(result.is_ok());
@@ -755,7 +762,10 @@ mod test {
         let message = decoder.decode(bytes).unwrap();
         let group = message.group(268).unwrap();
         assert_eq!(group.len(), 2);
-        assert_eq!(group.get(0).unwrap().get_raw(278).unwrap(), b"BID" as &[u8]);
+        assert_eq!(
+            group.get(0).unwrap().get_raw(278).unwrap(),
+            b"BID" as &[u8]
+        );
     }
 
     #[test]
@@ -799,7 +809,8 @@ mod test {
 
     #[test]
     fn message_must_end_with_separator() {
-        let msg = "8=FIX.4.2|9=41|35=D|49=AFUNDMGR|56=ABROKERt|15=USD|59=0|10=127";
+        let msg =
+            "8=FIX.4.2|9=41|35=D|49=AFUNDMGR|56=ABROKERt|15=USD|59=0|10=127";
         let mut codec = decoder();
         let result = codec.decode(msg.as_bytes());
         assert!(matches!(result, Err(DecodeError::Invalid)));
@@ -815,8 +826,7 @@ mod test {
 
     #[test]
     fn message_with_data_field() {
-        let msg =
-            "8=FIX.4.4|9=58|35=D|49=AFUNDMGR|56=ABROKERt|15=USD|39=0|93=8|89=foo|\x01bar|10=000|";
+        let msg = "8=FIX.4.4|9=58|35=D|49=AFUNDMGR|56=ABROKERt|15=USD|39=0|93=8|89=foo|\x01bar|10=000|";
         let mut codec = decoder();
         let result = codec.decode(msg.as_bytes()).unwrap();
         assert_eq!(result.get(93), Ok(8));
@@ -833,7 +843,8 @@ mod test {
 
     #[test]
     fn detect_incorrect_checksum() {
-        let msg = "8=FIX.4.2|9=43|35=D|49=AFUNDMGR|56=ABROKER|15=USD|59=0|10=146|";
+        let msg =
+            "8=FIX.4.2|9=43|35=D|49=AFUNDMGR|56=ABROKER|15=USD|59=0|10=146|";
         let mut codec = decoder();
         let result = codec.decode(msg.as_bytes());
         assert!(matches!(result, Err(DecodeError::Invalid)));
@@ -851,7 +862,10 @@ mod test {
             loop {
                 stream.read_exact(codec.fillable()).unwrap();
                 if codec.try_parse().unwrap().is_some() {
-                    assert_eq!(codec.message().get_raw(35), Some(&msg_type[..]));
+                    assert_eq!(
+                        codec.message().get_raw(35),
+                        Some(&msg_type[..])
+                    );
                     break;
                 }
             }

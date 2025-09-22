@@ -47,16 +47,34 @@ pub trait FieldMap<F> {
     fn get_raw(&self, field: F) -> Option<&[u8]>;
 
     /// Looks for a group that starts with `field` within `self`.
-    fn group(&self, field: F) -> Result<Self::Group, FieldValueError<<usize as FieldType>::Error>>;
+    fn group(
+        &self,
+        field: F,
+    ) -> Result<Self::Group, FieldValueError<<usize as FieldType>::Error>>;
 
     /// Like [`FieldMap::group`], but doesn't return an [`Err`] if the
     /// group is missing.
-    fn group_opt(&self, field: F) -> Result<Option<Self::Group>, <usize as FieldType>::Error> {
+    fn group_opt(
+        &self,
+        field: F,
+    ) -> Result<Option<Self::Group>, <usize as FieldType>::Error> {
         match self.group(field) {
             Ok(group) => Ok(Some(group)),
             Err(FieldValueError::Missing) => Ok(None),
             Err(FieldValueError::Invalid(e)) => Err(e),
         }
+    }
+
+    /// Internal helper to unify field decoding logic.
+    fn decode_field_internal<'a, V>(
+        &'a self,
+        field: F,
+        deserialize_fn: fn(&'a [u8]) -> Result<V, V::Error>,
+    ) -> Result<Option<V>, V::Error>
+    where
+        V: FieldType<'a>,
+    {
+        self.get_raw(field).map(deserialize_fn).transpose()
     }
 
     /// Looks for a `field` within `self` and then decodes its raw byte contents
@@ -65,17 +83,20 @@ pub trait FieldMap<F> {
     where
         V: FieldType<'a>,
     {
-        self.get_opt(field)
+        self.decode_field_internal(field, V::deserialize)
             .map_err(FieldValueError::Invalid)
             .and_then(|opt| opt.ok_or(FieldValueError::Missing))
     }
 
     /// Like [`FieldMap::get`], but with lossy deserialization.
-    fn get_lossy<'a, V>(&'a self, field: F) -> Result<V, FieldValueError<V::Error>>
+    fn get_lossy<'a, V>(
+        &'a self,
+        field: F,
+    ) -> Result<V, FieldValueError<V::Error>>
     where
         V: FieldType<'a>,
     {
-        self.get_lossy_opt(field)
+        self.decode_field_internal(field, V::deserialize_lossy)
             .map_err(FieldValueError::Invalid)
             .and_then(|opt| opt.ok_or(FieldValueError::Missing))
     }
@@ -86,7 +107,7 @@ pub trait FieldMap<F> {
     where
         V: FieldType<'a>,
     {
-        self.get_raw(field).map(V::deserialize).transpose()
+        self.decode_field_internal(field, V::deserialize)
     }
 
     /// Like [`FieldMap::get_opt`], but with lossy deserialization.
@@ -94,7 +115,7 @@ pub trait FieldMap<F> {
     where
         V: FieldType<'a>,
     {
-        self.get_raw(field).map(V::deserialize_lossy).transpose()
+        self.decode_field_internal(field, V::deserialize_lossy)
     }
 }
 
@@ -114,10 +135,7 @@ pub trait RepeatingGroup: Sized {
     /// Iteration MUST be done in sequential order, i.e. in which they appear in
     /// the original FIX message.
     fn entries(&self) -> GroupEntries<Self> {
-        GroupEntries {
-            group: self,
-            range: 0..self.len(),
-        }
+        GroupEntries { group: self, range: 0..self.len() }
     }
 }
 

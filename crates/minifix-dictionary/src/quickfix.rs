@@ -11,7 +11,9 @@ pub struct QuickFixReader<'a> {
 }
 
 impl<'a> QuickFixReader<'a> {
-    pub fn new(xml_document: &'a roxmltree::Document<'a>) -> ParseResult<Dictionary> {
+    pub fn new(
+        xml_document: &'a roxmltree::Document<'a>,
+    ) -> ParseResult<Dictionary> {
         let mut reader = Self::empty(xml_document)?;
         for child in reader.node_with_fields.children() {
             if child.is_element() {
@@ -51,27 +53,28 @@ impl<'a> QuickFixReader<'a> {
     fn empty(xml_document: &'a roxmltree::Document<'a>) -> ParseResult<Self> {
         let root = xml_document.root_element();
         let find_tagged_child = |tag: &str| {
-            root.children()
-                .find(|n| n.has_tag_name(tag))
-                .ok_or_else(|| {
-                    ParseDictionaryError::InvalidData(format!("<{}> tag not found", tag))
-                })
+            root.children().find(|n| n.has_tag_name(tag)).ok_or_else(|| {
+                ParseDictionaryError::InvalidData(format!(
+                    "<{}> tag not found",
+                    tag
+                ))
+            })
         };
-        let version_type = root
-            .attribute("type")
-            .ok_or(ParseDictionaryError::InvalidData(
+        let version_type = root.attribute("type").ok_or(
+            ParseDictionaryError::InvalidData(
                 "No version attribute.".to_string(),
-            ))?;
-        let version_major = root
-            .attribute("major")
-            .ok_or(ParseDictionaryError::InvalidData(
+            ),
+        )?;
+        let version_major = root.attribute("major").ok_or(
+            ParseDictionaryError::InvalidData(
                 "No major version attribute.".to_string(),
-            ))?;
-        let version_minor = root
-            .attribute("minor")
-            .ok_or(ParseDictionaryError::InvalidData(
+            ),
+        )?;
+        let version_minor = root.attribute("minor").ok_or(
+            ParseDictionaryError::InvalidData(
                 "No minor version attribute.".to_string(),
-            ))?;
+            ),
+        )?;
         let version_sp = root.attribute("servicepack").unwrap_or("0");
         let version = format!(
             "{}.{}.{}{}",
@@ -96,12 +99,16 @@ impl<'a> QuickFixReader<'a> {
     }
 }
 
-fn import_field(builder: &mut DictionaryBuilder, node: roxmltree::Node) -> ParseResult<()> {
+fn import_field(
+    builder: &mut DictionaryBuilder,
+    node: roxmltree::Node,
+) -> ParseResult<()> {
     if node.tag_name().name() != "field" {
         return Err(ParseDictionaryError::InvalidFormat);
     }
     let data_type_name = import_datatype(builder, node);
-    let value_restrictions = value_restrictions_from_node(node, data_type_name.clone());
+    let value_restrictions =
+        value_restrictions_from_node(node, data_type_name.clone());
     let name = node
         .attribute("name")
         .ok_or(ParseDictionaryError::InvalidFormat)?
@@ -127,7 +134,10 @@ fn import_field(builder: &mut DictionaryBuilder, node: roxmltree::Node) -> Parse
     Ok(())
 }
 
-fn import_message(dict: &mut DictionaryBuilder, node: roxmltree::Node) -> ParseResult<()> {
+fn import_message(
+    dict: &mut DictionaryBuilder,
+    node: roxmltree::Node,
+) -> ParseResult<()> {
     debug_assert_eq!(node.tag_name().name(), "message");
     import_category(dict, node)?;
     let mut layout_items = vec![];
@@ -188,7 +198,10 @@ fn import_component(
     Ok(())
 }
 
-fn import_datatype(builder: &mut DictionaryBuilder, node: roxmltree::Node) -> SmartString {
+fn import_datatype(
+    builder: &mut DictionaryBuilder,
+    node: roxmltree::Node,
+) -> SmartString {
     // References should only happen at <field> tags.
     debug_assert_eq!(node.tag_name().name(), "field");
     let datatype = {
@@ -224,20 +237,15 @@ fn value_restrictions_from_node(
                 .to_string();
             let description = child
                 .attribute("description")
-                .unwrap_or_else(|| panic_missing_tag_in_element(child, "description"))
+                .unwrap_or_else(|| {
+                    panic_missing_tag_in_element(child, "description")
+                })
                 .to_string();
-            let enum_value = FieldEnumData {
-                value: variant,
-                description,
-            };
+            let enum_value = FieldEnumData { value: variant, description };
             values.push(enum_value);
         }
     }
-    if values.is_empty() {
-        None
-    } else {
-        Some(values)
-    }
+    if values.is_empty() { None } else { Some(values) }
 }
 
 fn import_layout_item(
@@ -291,10 +299,7 @@ fn import_layout_item(
             for child in node.children().filter(|n| n.is_element()) {
                 items.push(import_layout_item(builder, child)?);
             }
-            LayoutItemKindData::Group {
-                len_field_tag,
-                items,
-            }
+            LayoutItemKindData::Group { len_field_tag, items }
         }
         _ => {
             return Err(ParseDictionaryError::InvalidFormat);
@@ -304,7 +309,10 @@ fn import_layout_item(
     Ok(item)
 }
 
-fn import_category(builder: &mut DictionaryBuilder, node: roxmltree::Node) -> ParseResult<()> {
+fn import_category(
+    builder: &mut DictionaryBuilder,
+    node: roxmltree::Node,
+) -> ParseResult<()> {
     debug_assert_eq!(node.tag_name().name(), "message");
     let name = node.attribute("msgcat").ok_or(ParseError::InvalidFormat)?;
 

@@ -1,5 +1,5 @@
-use minifix_dictionary::{TagU32, Dictionary};
 use heck::{ToPascalCase, ToShoutySnakeCase};
+use minifix_dictionary::{Dictionary, TagU32};
 use std::fs::File;
 use std::io::{self, Write};
 use std::path::PathBuf;
@@ -22,7 +22,8 @@ impl FinalOptimizedCodegen {
         let imports = self.generate_imports();
         let field_definitions_data = self.generate_field_definitions_data();
         let field_constants_macro = self.generate_field_constants_macro();
-        let compact_enum_definitions = self.generate_compact_enum_definitions();
+        let compact_enum_definitions =
+            self.generate_compact_enum_definitions();
         let constants_invocation = self.generate_constants_invocation();
 
         format!(
@@ -51,11 +52,12 @@ impl FinalOptimizedCodegen {
     /// Generate ultra-compact field definitions
     fn generate_field_definitions_data(&self) -> String {
         let mut field_tuples = Vec::new();
-        
+
         for field in self.dictionary.fields().iter() {
             let location = self.determine_field_location(field.tag());
-            let data_type = format!("{:?}", field.data_type().basetype()).replace("dict::", "");
-            
+            let data_type = format!("{:?}", field.data_type().basetype())
+                .replace("dict::", "");
+
             field_tuples.push(format!(
                 "(\"{}\",{},FixDatatype::{},FieldLocation::{})",
                 field.name(),
@@ -79,7 +81,7 @@ impl FinalOptimizedCodegen {
     /// Generate the constants invocation
     fn generate_constants_invocation(&self) -> String {
         let mut constant_mappings = Vec::new();
-        
+
         for (index, field) in self.dictionary.fields().iter().enumerate() {
             let const_name = field.name().to_shouty_snake_case();
             constant_mappings.push(format!("{} = {}", const_name, index));
@@ -88,10 +90,11 @@ impl FinalOptimizedCodegen {
         // Split into chunks to avoid exceeding macro limits
         let chunk_size = 100;
         let chunks: Vec<_> = constant_mappings.chunks(chunk_size).collect();
-        
+
         let mut invocations = Vec::new();
         for chunk in chunks {
-            invocations.push(format!("field_constants! {{ {} }}", chunk.join(", ")));
+            invocations
+                .push(format!("field_constants! {{ {} }}", chunk.join(", ")));
         }
 
         invocations.join("\n")
@@ -105,9 +108,11 @@ impl FinalOptimizedCodegen {
             if let Some(enums) = field.enums() {
                 let enum_name = field.name().to_pascal_case();
                 let mut variants = Vec::new();
-                
+
                 for enum_val in enums {
-                    let variant_name = self.sanitize_variant_name(enum_val.description().to_pascal_case());
+                    let variant_name = self.sanitize_variant_name(
+                        enum_val.description().to_pascal_case(),
+                    );
                     variants.push(format!(
                         "#[minifix(variant=\"{}\")] {}",
                         enum_val.value(),

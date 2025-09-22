@@ -35,9 +35,7 @@ impl DictionaryBuilder {
     }
 
     pub fn add_field(&mut self, field: FieldData) {
-        self.dict
-            .field_tags_by_name
-            .insert(field.name.clone(), field.tag);
+        self.dict.field_tags_by_name.insert(field.name.clone(), field.tag);
         self.dict.fields_by_tags.insert(field.tag, field);
     }
 
@@ -51,9 +49,7 @@ impl DictionaryBuilder {
     }
 
     pub fn add_component(&mut self, component: ComponentData) {
-        self.dict
-            .components_by_name
-            .insert(component.name.clone(), component);
+        self.dict.components_by_name.insert(component.name.clone(), component);
     }
 
     pub fn add_datatype(&mut self, datatype: DatatypeData) {
@@ -140,16 +136,9 @@ pub struct ComponentData {
 #[derive(Clone, Debug)]
 #[allow(dead_code)]
 pub enum LayoutItemKindData {
-    Component {
-        name: SmartString,
-    },
-    Group {
-        len_field_tag: u32,
-        items: Vec<LayoutItemData>,
-    },
-    Field {
-        tag: u32,
-    },
+    Component { name: SmartString },
+    Group { len_field_tag: u32, items: Vec<LayoutItemData> },
+    Field { tag: u32 },
 }
 
 #[derive(Clone, Debug)]

@@ -1,6 +1,6 @@
+use crate::FieldType;
 use crate::field_types::CheckSum;
 use crate::tagvalue::DecodeError;
-use crate::FieldType;
 use std::convert::TryInto;
 
 // A tag-value message can't possibly be shorter than this.
@@ -18,15 +18,15 @@ pub const FIELD_CHECKSUM_LEN_IN_BYTES: usize = 7;
 /// Returns a copy of the `CheckSum <10>` digits of `message`.
 pub fn checksum_digits(message: &[u8]) -> [u8; 3] {
     debug_assert!(message.len() >= MIN_FIX_MESSAGE_LEN_IN_BYTES);
-    message[message.len() - 4..message.len() - 1]
-        .try_into()
-        .unwrap()
+    message[message.len() - 4..message.len() - 1].try_into().unwrap()
 }
 
 pub fn verify_checksum(headerless_msg: &[u8]) -> Result<(), DecodeError> {
-    let msg_contents = &headerless_msg[..headerless_msg.len() - FIELD_CHECKSUM_LEN_IN_BYTES];
-    let nominal_checksum = CheckSum::deserialize_lossy(&checksum_digits(headerless_msg)[..])
-        .map_err(|_| DecodeError::CheckSum)?;
+    let msg_contents =
+        &headerless_msg[..headerless_msg.len() - FIELD_CHECKSUM_LEN_IN_BYTES];
+    let nominal_checksum =
+        CheckSum::deserialize_lossy(&checksum_digits(headerless_msg)[..])
+            .map_err(|_| DecodeError::CheckSum)?;
     let actual_checksum = CheckSum::compute(msg_contents);
     if nominal_checksum == actual_checksum {
         Ok(())

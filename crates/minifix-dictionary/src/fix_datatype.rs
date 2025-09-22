@@ -177,7 +177,9 @@ impl FixDatatype {
             "LENGTH" => FixDatatype::Length,
             "LOCALMKTDATE" => FixDatatype::LocalMktDate,
             "MONTHYEAR" => FixDatatype::MonthYear,
-            "MULTIPLECHARVALUE" | "MULTIPLEVALUESTRING" => FixDatatype::MultipleCharValue,
+            "MULTIPLECHARVALUE" | "MULTIPLEVALUESTRING" => {
+                FixDatatype::MultipleCharValue
+            }
             "MULTIPLESTRINGVALUE" => FixDatatype::MultipleStringValue,
             "NUMINGROUP" => FixDatatype::NumInGroup,
             "PERCENTAGE" => FixDatatype::Percentage,
@@ -365,9 +367,8 @@ mod test {
 
     #[test]
     fn names_are_unique() {
-        let as_vec = FixDatatype::iter_all()
-            .map(|dt| dt.name())
-            .collect::<Vec<&str>>();
+        let as_vec =
+            FixDatatype::iter_all().map(|dt| dt.name()).collect::<Vec<&str>>();
         let as_set = FixDatatype::iter_all()
             .map(|dt| dt.name())
             .collect::<HashSet<&str>>();

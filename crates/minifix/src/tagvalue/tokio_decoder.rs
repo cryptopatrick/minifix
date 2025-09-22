@@ -13,7 +13,10 @@ impl codec::Decoder for TokioRawDecoder {
     type Item = RawFrame<Bytes>;
     type Error = DecodeError;
 
-    fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
+    fn decode(
+        &mut self,
+        src: &mut BytesMut,
+    ) -> Result<Option<Self::Item>, Self::Error> {
         let split = src.split();
         let result = self.raw_decoder.decode(split);
         match result {

@@ -103,7 +103,10 @@ impl Default for Config {
             begin_string: "FIX.4.4".to_string(),
             environment: Environment::Production { allow_test: true },
             heartbeat: Duration::from_secs(30),
-            seq_numbers: SeqNumbers::new(NonZeroU64::new(1).unwrap(), NonZeroU64::new(1).unwrap()),
+            seq_numbers: SeqNumbers::new(
+                NonZeroU64::new(1).unwrap(),
+                NonZeroU64::new(1).unwrap(),
+            ),
             msg_seq_num_inbound: MsgSeqNumCounter::START,
             msg_seq_num_outbound: MsgSeqNumCounter::START,
             sender_comp_id: "SENDER_COMP".to_string(),

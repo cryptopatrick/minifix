@@ -17,9 +17,7 @@ pub struct Message<'a> {
 impl<'a> Message<'a> {
     /// Creates an [`Iterator`] over all FIX fields in `self`.
     pub fn iter_fields(&self) -> MessageFieldsIter<'a> {
-        MessageFieldsIter {
-            fields: self.internal.std_header.iter(),
-        }
+        MessageFieldsIter { fields: self.internal.std_header.iter() }
     }
 
     fn field_map<F>(&self, field: &F) -> &'a Fields<'a>
@@ -47,7 +45,8 @@ where
     fn group(
         &self,
         field: &F,
-    ) -> Result<Self::Group, FieldValueError<<usize as FieldType>::Error>> {
+    ) -> Result<Self::Group, FieldValueError<<usize as FieldType>::Error>>
+    {
         self.field_map(field)
             .get(field.name())
             .ok_or(FieldValueError::Missing)
@@ -67,16 +66,14 @@ where
     }
 
     fn get_raw(&self, field: &F) -> Option<&[u8]> {
-        self.field_map(field)
-            .get(field.name())
-            .and_then(|field_or_group| {
-                if let FieldOrGroup::Field(value) = field_or_group {
-                    let s: &str = value.borrow();
-                    Some(s.as_bytes())
-                } else {
-                    None
-                }
-            })
+        self.field_map(field).get(field.name()).and_then(|field_or_group| {
+            if let FieldOrGroup::Field(value) = field_or_group {
+                let s: &str = value.borrow();
+                Some(s.as_bytes())
+            } else {
+                None
+            }
+        })
     }
 }
 
@@ -104,7 +101,8 @@ impl<'a> RepeatingGroup for MessageGroup<'a> {
 
 #[derive(Debug)]
 pub struct MessageFieldsIter<'a> {
-    fields: std::collections::hash_map::Iter<'a, Cow<'a, str>, FieldOrGroup<'a>>,
+    fields:
+        std::collections::hash_map::Iter<'a, Cow<'a, str>, FieldOrGroup<'a>>,
 }
 
 impl<'a> Iterator for MessageFieldsIter<'a> {
@@ -136,28 +134,31 @@ impl Decoder {
         }
     }
 
-    pub fn decode<'a>(&'a mut self, data: &'a [u8]) -> Result<Message<'a>, DecodeError> {
+    pub fn decode<'a>(
+        &'a mut self,
+        data: &'a [u8],
+    ) -> Result<Message<'a>, DecodeError> {
         let mut deserilizer = serde_json::Deserializer::from_slice(data);
         let msg = self.message_builder();
-        MessageInternal::deserialize_in_place(&mut deserilizer, msg).map_err(|err| {
-            if err.is_syntax() || err.is_eof() || err.is_io() {
-                DecodeError::Syntax
-            } else {
-                DecodeError::Schema
-            }
-        })?;
-        Ok(Message {
-            internal: msg,
-            group_map: None,
-        })
+        MessageInternal::deserialize_in_place(&mut deserilizer, msg).map_err(
+            |err| {
+                if err.is_syntax() || err.is_eof() || err.is_io() {
+                    DecodeError::Syntax
+                } else {
+                    DecodeError::Schema
+                }
+            },
+        )?;
+        Ok(Message { internal: msg, group_map: None })
     }
 
     fn message_builder<'a>(&'a mut self) -> &'a mut MessageInternal<'a> {
         self.message_builder.clear();
         unsafe {
-            std::mem::transmute::<&'a mut MessageInternal<'static>, &'a mut MessageInternal<'a>>(
-                &mut self.message_builder,
-            )
+            std::mem::transmute::<
+                &'a mut MessageInternal<'static>,
+                &'a mut MessageInternal<'a>,
+            >(&mut self.message_builder)
         }
     }
 }
@@ -213,7 +214,8 @@ mod test {
     use super::*;
 
     const MESSAGE_SIMPLE: &str = include_str!("test_data/message_simple.json");
-    const MESSAGE_WITHOUT_HEADER: &str = include_str!("test_data/message_without_header.json");
+    const MESSAGE_WITHOUT_HEADER: &str =
+        include_str!("test_data/message_without_header.json");
 
     fn encoder_fix44() -> Decoder {
         Decoder::new(Dictionary::fix44())

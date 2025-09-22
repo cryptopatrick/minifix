@@ -5,8 +5,8 @@ mod fix_datatype;
 mod quickfix;
 
 use builder::{
-    AbbreviationData, CategoryData, ComponentData, DatatypeData, FieldData, FieldEnumData,
-    LayoutItemData, LayoutItemKindData, MessageData,
+    AbbreviationData, CategoryData, ComponentData, DatatypeData, FieldData,
+    FieldEnumData, LayoutItemData, LayoutItemKindData, MessageData,
 };
 pub use fix_datatype::FixDatatype;
 use fnv::FnvHashMap;
@@ -116,9 +116,11 @@ impl Dictionary {
 
     /// Attempts to read a QuickFIX-style specification file and convert it into
     /// a [`Dictionary`].
-    pub fn from_quickfix_spec(input: &str) -> Result<Self, ParseDictionaryError> {
-        let xml_document =
-            roxmltree::Document::parse(input).map_err(|_| ParseDictionaryError::InvalidFormat)?;
+    pub fn from_quickfix_spec(
+        input: &str,
+    ) -> Result<Self, ParseDictionaryError> {
+        let xml_document = roxmltree::Document::parse(input)
+            .map_err(|_| ParseDictionaryError::InvalidFormat)?;
         QuickFixReader::new(&xml_document)
     }
 
@@ -172,9 +174,6 @@ impl Dictionary {
         let spec = include_str!("resources/quickfix/FIX-4.4.xml");
         Dictionary::from_quickfix_spec(spec).unwrap()
     }
-
-
-
 
     /// Creates a new [`Dictionary`] for FIXT 1.1.
     #[cfg(feature = "fixt11")]
@@ -237,16 +236,12 @@ impl Dictionary {
     /// assert_eq!(msg1.name(), msg2.name());
     /// ```
     pub fn message_by_msgtype(&self, msgtype: &str) -> Option<Message> {
-        self.messages_by_msgtype
-            .get(msgtype)
-            .map(|data| Message(self, data))
+        self.messages_by_msgtype.get(msgtype).map(|data| Message(self, data))
     }
 
     /// Returns the [`Component`] named `name`, if any.
     pub fn component_by_name(&self, name: &str) -> Option<Component> {
-        self.components_by_name
-            .get(name)
-            .map(|data| Component(data, self))
+        self.components_by_name.get(name).map(|data| Component(data, self))
     }
 
     /// Returns the [`Datatype`] named `name`, if any.
@@ -328,10 +323,7 @@ impl Dictionary {
     /// Returns a [`Vec`] of all [`Field`]'s in this [`Dictionary`]. The ordering
     /// of items is not specified.
     pub fn fields(&self) -> Vec<Field> {
-        self.fields_by_tags
-            .values()
-            .map(|data| Field(self, data))
-            .collect()
+        self.fields_by_tags.values().map(|data| Field(self, data)).collect()
     }
 
     /// Returns a [`Vec`] of all [`Component`]'s in this [`Dictionary`]. The ordering
@@ -397,24 +389,21 @@ impl<'a> Component<'a> {
     /// otherwise.
     pub fn is_group(&self) -> bool {
         match self.0.component_type {
-            FixmlComponentAttributes::Block { is_repeating, .. } => is_repeating,
+            FixmlComponentAttributes::Block { is_repeating, .. } => {
+                is_repeating
+            }
             _ => false,
         }
     }
 
     /// Returns the [`Category`] to which `self` belongs.
     pub fn category(&self) -> Category {
-        self.1
-            .category_by_name(self.0.category_name.as_str())
-            .unwrap()
+        self.1.category_by_name(self.0.category_name.as_str()).unwrap()
     }
 
     /// Returns an [`Iterator`] over all items that are part of `self`.
     pub fn items(&self) -> impl Iterator<Item = LayoutItem> {
-        self.0
-            .layout_items
-            .iter()
-            .map(move |data| LayoutItem(self.1, data))
+        self.0.layout_items.iter().map(move |data| LayoutItem(self.1, data))
     }
 
     /// Checks whether `field` appears in the definition of `self` and returns
@@ -435,11 +424,7 @@ impl<'a> Component<'a> {
 #[allow(dead_code)]
 pub enum FixmlComponentAttributes {
     Xml,
-    Block {
-        is_repeating: bool,
-        is_implicit: bool,
-        is_optimized: bool,
-    },
+    Block { is_repeating: bool, is_implicit: bool, is_optimized: bool },
     Message,
 }
 
@@ -509,7 +494,8 @@ impl<'a> Field<'a> {
 
         self.fix_datatype().base_type() == FixDatatype::NumInGroup
             || self.name().ends_with("Len")
-            || (self.name().starts_with("No") && nth_char_is_uppercase(self.name(), 2))
+            || (self.name().starts_with("No")
+                && nth_char_is_uppercase(self.name(), 2))
     }
 
     /// Returns the [`FixDatatype`] of `self`.
@@ -540,15 +526,11 @@ impl<'a> Field<'a> {
 
     /// Returns the [`Datatype`] of `self`.
     pub fn data_type(&self) -> Datatype {
-        self.0
-            .datatype_by_name(self.1.data_type_name.as_str())
-            .unwrap()
+        self.0.datatype_by_name(self.1.data_type_name.as_str()).unwrap()
     }
 
     pub fn data_tag(&self) -> Option<TagU32> {
-        self.1
-            .associated_data_tag
-            .map(|tag| TagU32::new(tag as u32).unwrap())
+        self.1.associated_data_tag.map(|tag| TagU32::new(tag as u32).unwrap())
     }
 
     pub fn required_in_xml_messages(&self) -> bool {
@@ -585,15 +567,15 @@ pub trait IsFieldDefinition {
     fn location(&self) -> FieldLocation;
 }
 
-fn layout_item_kind<'a>(item: &'a LayoutItemKindData, dict: &'a Dictionary) -> LayoutItemKind<'a> {
+fn layout_item_kind<'a>(
+    item: &'a LayoutItemKindData,
+    dict: &'a Dictionary,
+) -> LayoutItemKind<'a> {
     match item {
         LayoutItemKindData::Component { name } => {
             LayoutItemKind::Component(dict.component_by_name(name).unwrap())
         }
-        LayoutItemKindData::Group {
-            len_field_tag,
-            items: items_data,
-        } => {
+        LayoutItemKindData::Group { len_field_tag, items: items_data } => {
             let items = items_data
                 .iter()
                 .map(|item_data| LayoutItem(dict, item_data))
@@ -640,15 +622,9 @@ impl<'a> LayoutItem<'a> {
             LayoutItemKindData::Component { name } => {
                 self.0.component_by_name(name).unwrap().name().to_string()
             }
-            LayoutItemKindData::Group {
-                len_field_tag,
-                items: _items,
-            } => self
-                .0
-                .field_by_tag(*len_field_tag)
-                .unwrap()
-                .name()
-                .to_string(),
+            LayoutItemKindData::Group { len_field_tag, items: _items } => {
+                self.0.field_by_tag(*len_field_tag).unwrap().name().to_string()
+            }
             LayoutItemKindData::Field { tag } => {
                 self.0.field_by_tag(*tag).unwrap().name().to_string()
             }
@@ -689,7 +665,9 @@ impl<'a> Message<'a> {
                 } else {
                     None
                 }
-            } else if let LayoutItemKind::Component(_component) = layout_item.kind() {
+            } else if let LayoutItemKind::Component(_component) =
+                layout_item.kind()
+            {
                 None
             } else {
                 None
@@ -703,10 +681,7 @@ impl<'a> Message<'a> {
     }
 
     pub fn layout(&self) -> impl Iterator<Item = LayoutItem> {
-        self.1
-            .layout_items
-            .iter()
-            .map(move |data| LayoutItem(self.0, data))
+        self.1.layout_items.iter().map(move |data| LayoutItem(self.0, data))
     }
 
     pub fn fixml_required(&self) -> bool {

@@ -5,6 +5,29 @@ use crate::{Buffer, BufferWriter, FieldType, GetConfig, SetField, TagU32};
 use std::fmt::Write;
 use std::ops::Range;
 
+/// Trait for converting tag types to u32 for encoding.
+pub(crate) trait IntoTag {
+    fn into_tag(self) -> u32;
+}
+
+impl IntoTag for u32 {
+    fn into_tag(self) -> u32 {
+        self
+    }
+}
+
+impl IntoTag for TagU32 {
+    fn into_tag(self) -> u32 {
+        self.get()
+    }
+}
+
+impl<F: IsFieldDefinition> IntoTag for &F {
+    fn into_tag(self) -> u32 {
+        self.tag().get()
+    }
+}
+
 /// A buffered, content-agnostic FIX encoder.
 ///
 /// [`Encoder`] is the fundamental building block for building higher-level
@@ -134,42 +157,22 @@ where
     }
 }
 
-impl<'a, B> SetField<u32> for EncoderHandle<'a, B>
+impl<'a, B, T> SetField<T> for EncoderHandle<'a, B>
 where
     B: Buffer,
+    T: IntoTag,
 {
-    fn set_with<'s, V>(&'s mut self, tag: u32, value: V, settings: V::SerializeSettings)
-    where
+    fn set_with<'s, V>(
+        &'s mut self,
+        tag: T,
+        value: V,
+        settings: V::SerializeSettings,
+    ) where
         V: FieldType<'s>,
     {
-        write!(BufferWriter(self.buffer), "{}=", tag).unwrap();
+        let tag_u32 = tag.into_tag();
+        write!(BufferWriter(self.buffer), "{}=", tag_u32).unwrap();
         value.serialize_with(self.buffer, settings);
-        self.buffer
-            .extend_from_slice(&[self.encoder.config().separator]);
-    }
-}
-
-impl<'a, B> SetField<TagU32> for EncoderHandle<'a, B>
-where
-    B: Buffer,
-{
-    fn set_with<'s, V>(&'s mut self, tag: TagU32, value: V, settings: V::SerializeSettings)
-    where
-        V: FieldType<'s>,
-    {
-        self.set_with(tag.get(), value, settings)
-    }
-}
-
-impl<'a, B, F> SetField<&F> for EncoderHandle<'a, B>
-where
-    B: Buffer,
-    F: IsFieldDefinition,
-{
-    fn set_with<'s, V>(&'s mut self, field: &F, value: V, settings: V::SerializeSettings)
-    where
-        V: FieldType<'s>,
-    {
-        self.set_with(field.tag(), value, settings)
+        self.buffer.extend_from_slice(&[self.encoder.config().separator]);
     }
 }

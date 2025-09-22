@@ -1,7 +1,8 @@
 use super::{Error, Header};
 use std::io;
 
-const MAX_MESSAGE_SIZE_IN_BYTES: usize = u32::MAX as usize - Header::LENGTH_IN_BYTES;
+const MAX_MESSAGE_SIZE_IN_BYTES: usize =
+    u32::MAX as usize - Header::LENGTH_IN_BYTES;
 
 /// An immutable view into a SOFH-enclosed message, complete with its
 /// encoding type tag and message payload.
@@ -38,10 +39,7 @@ where
     /// ```
     pub fn new(encoding_type: u16, payload: T) -> Self {
         assert!(payload.as_ref().len() <= MAX_MESSAGE_SIZE_IN_BYTES);
-        Frame {
-            encoding_type,
-            payload,
-        }
+        Frame { encoding_type, payload }
     }
 
     /// Returns the 16-bits encoding type of `self`. You may want to
@@ -136,7 +134,8 @@ impl<'a> Frame<&'a [u8]> {
         let header = Header::from_bytes(data)?;
         Ok(Frame::new(
             header.encoding_type,
-            &data[Header::LENGTH_IN_BYTES..header.nominal_message_length_in_bytes],
+            &data[Header::LENGTH_IN_BYTES
+                ..header.nominal_message_length_in_bytes],
         ))
     }
 }
@@ -214,7 +213,8 @@ mod test {
             let frame = Frame::<&[u8]>::new(encoding_type, &payload[..]);
             let mut buffer = vec![];
             frame.serialize(&mut buffer).unwrap();
-            let frame_decoded = Frame::<&[u8]>::deserialize(&buffer[..]).unwrap();
+            let frame_decoded =
+                Frame::<&[u8]>::deserialize(&buffer[..]).unwrap();
             frame_decoded.encoding_type() == encoding_type
                 && frame_decoded.payload() == &&payload[..]
         }

@@ -1,4 +1,5 @@
-use crate::tagvalue::{utils, Config, DecodeError};
+use crate::tagvalue::{Config, DecodeError, utils};
+use crate::utils::parsing::parse_decimal_ascii;
 use crate::{Buffer, GetConfig, StreamingDecoder};
 use std::ops::Range;
 
@@ -125,8 +126,8 @@ impl RawDecoder {
             return Err(DecodeError::Invalid);
         }
 
-        let header_info =
-            HeaderInfo::parse(data, self.config().separator).ok_or(DecodeError::Invalid)?;
+        let header_info = HeaderInfo::parse(data, self.config().separator)
+            .ok_or(DecodeError::Invalid)?;
 
         utils::verify_body_length(
             data,
@@ -141,7 +142,8 @@ impl RawDecoder {
         Ok(RawFrame {
             data: src,
             begin_string: header_info.field_0,
-            payload: header_info.field_1.end + 1..len - utils::FIELD_CHECKSUM_LEN_IN_BYTES,
+            payload: header_info.field_1.end + 1
+                ..len - utils::FIELD_CHECKSUM_LEN_IN_BYTES,
         })
     }
 }
@@ -200,15 +202,20 @@ where
     fn try_parse(&mut self) -> Result<Option<()>, Self::Error> {
         match self.state {
             ParserState::Empty => {
-                let header_info =
-                    HeaderInfo::parse(self.buffer.as_slice(), self.config().separator);
+                let header_info = HeaderInfo::parse(
+                    self.buffer.as_slice(),
+                    self.config().separator,
+                );
                 if let Some(header_info) = header_info {
                     let expected_len_of_frame = header_info.field_1.end
                         + 1
                         + header_info.nominal_body_len
                         + utils::FIELD_CHECKSUM_LEN_IN_BYTES;
 
-                    self.state = ParserState::Header(header_info, expected_len_of_frame);
+                    self.state = ParserState::Header(
+                        header_info,
+                        expected_len_of_frame,
+                    );
                     Ok(None)
                 } else {
                     Err(DecodeError::Invalid)
@@ -238,7 +245,9 @@ where
                     ..data.len() - utils::FIELD_CHECKSUM_LEN_IN_BYTES,
             }
         } else {
-            panic!("The message is not fully decoded. Check `try_parse` return value.");
+            panic!(
+                "The message is not fully decoded. Check `try_parse` return value."
+            );
         }
     }
 }
@@ -264,11 +273,8 @@ struct HeaderInfo {
 
 impl HeaderInfo {
     fn parse(data: &[u8], separator: u8) -> Option<Self> {
-        let mut info = Self {
-            field_0: 0..1,
-            field_1: 0..1,
-            nominal_body_len: 0,
-        };
+        let mut info =
+            Self { field_0: 0..1, field_1: 0..1, nominal_body_len: 0 };
 
         let mut iterator = data.iter();
         let mut find_byte = |byte| iterator.position(|b| *b == byte);
@@ -285,11 +291,12 @@ impl HeaderInfo {
         i += find_byte(separator)?;
         info.field_1.end = i;
 
-        for byte in &data[info.field_1.start..info.field_1.end] {
-            info.nominal_body_len = info
-                .nominal_body_len
-                .wrapping_mul(10)
-                .wrapping_add(byte.wrapping_sub(b'0') as usize);
+        if let Some(body_len) =
+            parse_decimal_ascii(&data[info.field_1.start..info.field_1.end])
+        {
+            info.nominal_body_len = body_len as usize;
+        } else {
+            return None;
         }
 
         Some(info)
@@ -321,10 +328,15 @@ mod test {
     #[test]
     fn sample_message_is_valid() {
         let decoder = new_decoder();
-        let msg = "8=FIX.4.2|9=40|35=D|49=AFUNDMGR|56=ABROKER|15=USD|59=0|10=091|".as_bytes();
+        let msg =
+            "8=FIX.4.2|9=40|35=D|49=AFUNDMGR|56=ABROKER|15=USD|59=0|10=091|"
+                .as_bytes();
         let frame = decoder.decode(msg).unwrap();
         assert_eq!(frame.begin_string(), b"FIX.4.2");
-        assert_eq!(frame.payload(), b"35=D|49=AFUNDMGR|56=ABROKER|15=USD|59=0|");
+        assert_eq!(
+            frame.payload(),
+            b"35=D|49=AFUNDMGR|56=ABROKER|15=USD|59=0|"
+        );
     }
 
     #[test]
@@ -349,7 +361,8 @@ mod test {
         decoder.config_mut().separator = 0x01;
         decoder.config_mut().verify_checksum = true;
         let msg =
-            "8=FIX.4.2|9=40|35=D|49=AFUNDMGR|56=ABROKER|15=USD|59=0|10=000|".replace('|', "\u{01}");
+            "8=FIX.4.2|9=40|35=D|49=AFUNDMGR|56=ABROKER|15=USD|59=0|10=000|"
+                .replace('|', "\u{01}");
         assert!(matches!(decoder.decode(&msg), Err(DecodeError::CheckSum)));
     }
 

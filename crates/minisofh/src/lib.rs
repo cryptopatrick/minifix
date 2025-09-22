@@ -54,7 +54,9 @@ pub enum Error {
     #[error("The SOFH-enclosed message's length is outside the legal range.")]
     InvalidMessageLength,
     /// The SOFH-enclosed message is incomplete. More bytes are needed.
-    #[error("The SOFH-enclosed message is incomplete. {needed} more bytes are needed.")]
+    #[error(
+        "The SOFH-enclosed message is incomplete. {needed} more bytes are needed."
+    )]
     Incomplete {
         /// The number of missing bytes to complete the SOFH-enclosed message.
         needed: usize,
@@ -80,7 +82,9 @@ impl Header {
     fn to_bytes(&self) -> [u8; Self::LENGTH_IN_BYTES] {
         let mut bytes = [0u8; Self::LENGTH_IN_BYTES];
         let (a, b) = bytes.split_at_mut(4);
-        a.copy_from_slice(&(self.nominal_message_length_in_bytes as u32).to_be_bytes());
+        a.copy_from_slice(
+            &(self.nominal_message_length_in_bytes as u32).to_be_bytes(),
+        );
         b.copy_from_slice(&self.encoding_type.to_be_bytes());
         bytes
     }
@@ -95,12 +99,11 @@ impl Header {
             .try_into()
             .map(|header_bytes: &[u8; Self::LENGTH_IN_BYTES]| {
                 let nominal_message_length_in_bytes =
-                    u32::from_be_bytes(header_bytes[0..4].try_into().unwrap()) as usize;
-                let encoding_type = u16::from_be_bytes(header_bytes[4..6].try_into().unwrap());
-                Self {
-                    nominal_message_length_in_bytes,
-                    encoding_type,
-                }
+                    u32::from_be_bytes(header_bytes[0..4].try_into().unwrap())
+                        as usize;
+                let encoding_type =
+                    u16::from_be_bytes(header_bytes[4..6].try_into().unwrap());
+                Self { nominal_message_length_in_bytes, encoding_type }
             })
             .map_err(|_| err_incomplete())?;
         if header.nominal_message_length_in_bytes < Self::LENGTH_IN_BYTES {

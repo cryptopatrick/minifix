@@ -1,4 +1,5 @@
-use super::{Tz, ERR_TIME};
+use super::{ERR_TIME, Tz};
+use crate::utils::encoding::ascii_digit_to_u32;
 use crate::{Buffer, FieldType};
 
 /// Timezone-aware intra-day timestamp.
@@ -84,11 +85,14 @@ impl<'a> FieldType<'a> for TzTime {
         if data.len() < 6 || data[2] != b':' {
             return Err(ERR_TIME);
         }
-        let hour = ascii_digit_to_u32(data[0], 10) + ascii_digit_to_u32(data[1], 1);
-        let minute = ascii_digit_to_u32(data[3], 10) + ascii_digit_to_u32(data[4], 1);
+        let hour =
+            ascii_digit_to_u32(data[0], 10) + ascii_digit_to_u32(data[1], 1);
+        let minute =
+            ascii_digit_to_u32(data[3], 10) + ascii_digit_to_u32(data[4], 1);
         match data[5] {
             b':' => {
-                let second = ascii_digit_to_u32(data[6], 10) + ascii_digit_to_u32(data[7], 1);
+                let second = ascii_digit_to_u32(data[6], 10)
+                    + ascii_digit_to_u32(data[7], 1);
                 Ok(TzTime {
                     hour,
                     minute,
@@ -108,10 +112,6 @@ impl<'a> FieldType<'a> for TzTime {
     }
 }
 
-const fn ascii_digit_to_u32(digit: u8, multiplier: u32) -> u32 {
-    (digit as u32).wrapping_sub(b'0' as u32) * multiplier
-}
-
 #[cfg(test)]
 mod test {
     use super::{FieldType, *};
@@ -124,13 +124,13 @@ mod test {
     }
 
     impl TestCase {
-        const fn new(s: &'static str, hour: u32, minute: u32, second: u32) -> Self {
-            Self {
-                bytes: s.as_bytes(),
-                hour,
-                minute,
-                second,
-            }
+        const fn new(
+            s: &'static str,
+            hour: u32,
+            minute: u32,
+            second: u32,
+        ) -> Self {
+            Self { bytes: s.as_bytes(), hour, minute, second }
         }
     }
 

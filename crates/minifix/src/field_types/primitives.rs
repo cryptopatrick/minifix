@@ -1,9 +1,10 @@
-use super::{ZeroPadding, ERR_INT_INVALID, ERR_UTF8};
+use super::{ERR_INT_INVALID, ERR_UTF8, ZeroPadding};
 use crate::{Buffer, BufferWriter, FieldType};
 use std::fmt::Write;
 
 const ERR_BOOL_LENGTH: &str = "Invalid length; a boolean is Y or N (1 char).";
-const ERR_BOOL_CHAR: &str = "Invalid character for boolean. Only Y and N are valid.";
+const ERR_BOOL_CHAR: &str =
+    "Invalid character for boolean. Only Y and N are valid.";
 
 macro_rules! lossy_deserialize_unsigned {
     ($data:ident, $ty:ty) => {{
@@ -36,12 +37,22 @@ macro_rules! impl_unsigned {
             type Error = &'static str;
             type SerializeSettings = ZeroPadding;
 
-            fn serialize_with<B>(&self, buffer: &mut B, padding: ZeroPadding) -> usize
+            fn serialize_with<B>(
+                &self,
+                buffer: &mut B,
+                padding: ZeroPadding,
+            ) -> usize
             where
                 B: Buffer,
             {
                 let initial_len = buffer.len();
-                write!(BufferWriter(buffer), "{:0width$}", self, width = padding.0).unwrap();
+                write!(
+                    BufferWriter(buffer),
+                    "{:0width$}",
+                    self,
+                    width = padding.0
+                )
+                .unwrap();
                 buffer.len() - initial_len
             }
 

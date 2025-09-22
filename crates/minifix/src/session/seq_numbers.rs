@@ -11,10 +11,7 @@ pub struct SeqNumbers {
 impl SeqNumbers {
     /// Creates a new tracker starting from `inbound` and `outbound`.
     pub fn new(inbound: NonZeroU64, outbound: NonZeroU64) -> Self {
-        Self {
-            next_inbound: inbound.get(),
-            next_outbound: outbound.get(),
-        }
+        Self { next_inbound: inbound.get(), next_outbound: outbound.get() }
     }
 
     /// Returns the expected seq. number of the next inbound message.
@@ -35,7 +32,10 @@ impl SeqNumbers {
         self.next_outbound += 1;
     }
 
-    pub fn validate_inbound(&self, inbound: u64) -> Result<(), SeqNumberError> {
+    pub fn validate_inbound(
+        &self,
+        inbound: u64,
+    ) -> Result<(), SeqNumberError> {
         match inbound.cmp(&self.next_inbound) {
             Ordering::Equal => Ok(()),
             Ordering::Less => Err(SeqNumberError::TooLow),
@@ -48,10 +48,7 @@ impl Default for SeqNumbers {
     /// Returns the default [`SeqNumbers`](SeqNumbers) at the start of a new FIX
     /// session, i.e. both 1.
     fn default() -> Self {
-        Self {
-            next_inbound: 1,
-            next_outbound: 1,
-        }
+        Self { next_inbound: 1, next_outbound: 1 }
     }
 }
 

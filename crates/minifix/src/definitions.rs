@@ -9,7 +9,7 @@
 //! the most basic operation.
 
 use crate::dict::FixDatatype;
-use crate::{dict, TagU32};
+use crate::{TagU32, dict};
 
 #[derive(Debug, Clone)]
 #[doc(hidden)]
@@ -76,9 +76,6 @@ pub mod fix43 {
 pub mod fix44 {
     include!(concat!(env!("OUT_DIR"), "/fix44.rs"));
 }
-
-
-
 
 #[cfg(feature = "fixt11")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "fixt11")))]

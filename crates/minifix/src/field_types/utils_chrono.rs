@@ -1,4 +1,4 @@
-use super::{Tz, ERR_TIME, ERR_UTF8};
+use super::{ERR_TIME, ERR_UTF8, Tz};
 use crate::{Buffer, BufferWriter, FieldType};
 use chrono::{DateTime, NaiveDateTime, Timelike};
 use std::fmt::Write;
@@ -22,7 +22,11 @@ impl<'a> FieldType<'a> for chrono::NaiveDateTime {
     type Error = &'static str;
     type SerializeSettings = WithMilliseconds;
 
-    fn serialize_with<B>(&self, buffer: &mut B, with_millis: Self::SerializeSettings) -> usize
+    fn serialize_with<B>(
+        &self,
+        buffer: &mut B,
+        with_millis: Self::SerializeSettings,
+    ) -> usize
     where
         B: Buffer,
     {
@@ -52,7 +56,11 @@ impl<'a> FieldType<'a> for chrono::NaiveDate {
     type Error = &'static str;
     type SerializeSettings = ();
 
-    fn serialize_with<B>(&self, buffer: &mut B, _settings: Self::SerializeSettings) -> usize
+    fn serialize_with<B>(
+        &self,
+        buffer: &mut B,
+        _settings: Self::SerializeSettings,
+    ) -> usize
     where
         B: Buffer,
     {
@@ -153,6 +161,7 @@ impl<'a> FieldType<'a> for chrono::DateTime<chrono::FixedOffset> {
         }
         let utc_naive_datetime = NaiveDateTime::deserialize(&data[..17])?;
         let tz = chrono::FixedOffset::deserialize(&data[17..])?;
-        Ok(DateTime::<chrono::Utc>::from_utc(utc_naive_datetime, chrono::Utc).with_timezone(&tz))
+        Ok(DateTime::<chrono::Utc>::from_utc(utc_naive_datetime, chrono::Utc)
+            .with_timezone(&tz))
     }
 }

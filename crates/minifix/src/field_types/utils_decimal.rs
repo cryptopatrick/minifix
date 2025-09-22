@@ -1,6 +1,6 @@
 use super::{ERR_DECIMAL, ERR_UTF8};
-use crate::prelude::*;
 use crate::BufferWriter;
+use crate::prelude::*;
 use decimal::d128;
 use std::fmt::Write;
 use std::str::FromStr;
@@ -26,10 +26,6 @@ impl<'a> FieldType<'a> for d128 {
         let number = d128::from_str(s).expect(ERR_DECIMAL);
 
         let status = d128::get_status();
-        if status.is_empty() {
-            Ok(number)
-        } else {
-            Err(status)
-        }
+        if status.is_empty() { Ok(number) } else { Err(status) }
     }
 }

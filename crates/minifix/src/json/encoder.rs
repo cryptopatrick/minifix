@@ -1,5 +1,5 @@
-use crate::dict::IsFieldDefinition;
 use crate::FieldType;
+use crate::dict::IsFieldDefinition;
 
 /// A codec for the JSON encoding type.
 #[derive(Debug, Clone)]
@@ -16,10 +16,7 @@ impl Default for Encoder {
 
 impl Encoder {
     pub fn new() -> Self {
-        Self {
-            buffer: Vec::new(),
-            has_message: false,
-        }
+        Self { buffer: Vec::new(), has_message: false }
     }
 
     pub fn start_message(&mut self) -> encoder_states::Initial {
@@ -42,12 +39,8 @@ pub mod encoder_states {
 
     impl<'a> Initial<'a> {
         pub fn with_header(self) -> StdHeader<'a> {
-            self.encoder
-                .buffer
-                .extend_from_slice(br#"{"StandardHeader":{"#);
-            StdHeader {
-                encoder: self.encoder,
-            }
+            self.encoder.buffer.extend_from_slice(br#"{"StandardHeader":{"#);
+            StdHeader { encoder: self.encoder }
         }
     }
 
@@ -84,9 +77,7 @@ pub mod encoder_states {
     impl<'a> StdHeader<'a> {
         pub fn with_body(self) -> Body<'a> {
             self.encoder.buffer.extend_from_slice(br#"},"Body":{"#);
-            Body {
-                encoder: self.encoder,
-            }
+            Body { encoder: self.encoder }
         }
 
         pub fn set<T, F>(self, field: &F, value: T) -> Self
@@ -113,12 +104,8 @@ pub mod encoder_states {
 
     impl<'a> Body<'a> {
         pub fn with_trailer(self) -> StdTrailer<'a> {
-            self.encoder
-                .buffer
-                .extend_from_slice(br#"},"StandardTrailer":{"#);
-            StdTrailer {
-                encoder: self.encoder,
-            }
+            self.encoder.buffer.extend_from_slice(br#"},"StandardTrailer":{"#);
+            StdTrailer { encoder: self.encoder }
         }
 
         pub fn set<T, F>(self, field: &F, value: T) -> Self

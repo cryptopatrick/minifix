@@ -81,7 +81,9 @@ impl EncodingType {
     pub const fn new(value: u16) -> Option<Self> {
         // https://www.fixtrading.org/standards/fix-sofh-online/#encoding_type-field
         Some(match value {
-            Self::PRIVATE_START..=Self::PRIVATE_END => EncodingType::Private(value as u8),
+            Self::PRIVATE_START..=Self::PRIVATE_END => {
+                EncodingType::Private(value as u8)
+            }
             Self::PROTOBUF => EncodingType::Protobuf,
             Self::SBE10BE => EncodingType::SimpleBinaryEncodingV10BE,
             Self::ASN1PER => EncodingType::Asn1PER,
@@ -187,7 +189,9 @@ mod test {
     fn low_values_correspond_to_private_encoding_types() {
         for value in &[0x1, 0x82, 0xff] {
             let etype = EncodingType::new(*value).unwrap();
-            assert!(matches!(etype, EncodingType::Private(x) if x as u16 == *value));
+            assert!(
+                matches!(etype, EncodingType::Private(x) if x as u16 == *value)
+            );
         }
     }
 

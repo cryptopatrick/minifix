@@ -1,3 +1,4 @@
+use crate::utils::encoding::ascii_digit_to_u32;
 use crate::{Buffer, FieldType};
 use std::hash::Hash;
 use std::time::Duration;
@@ -36,16 +37,16 @@ pub struct Tz {
 
 impl Tz {
     /// The UTC timezone.
-    pub const UTC: Self = Self {
-        offset_from_utc_in_seconds: 0,
-    };
+    pub const UTC: Self = Self { offset_from_utc_in_seconds: 0 };
 
     /// Calculates the offset information of `self` as compared to UTC. The
     /// return value is in the form of a sign (-1, 0, or +1) and a [`Duration`].
     pub fn offset(&self) -> (i32, Duration) {
         (
             self.offset_from_utc_in_seconds.signum(),
-            Duration::from_secs(self.offset_from_utc_in_seconds.unsigned_abs() as u64),
+            Duration::from_secs(
+                self.offset_from_utc_in_seconds.unsigned_abs() as u64,
+            ),
         )
     }
 
@@ -60,16 +61,15 @@ impl Tz {
     pub fn to_chrono_offset(&self) -> chrono::FixedOffset {
         // unwrap(): we already verified that the offset is within bounds during
         // deserialization
-        chrono::FixedOffset::east_opt(self.offset().1.as_secs() as i32).unwrap()
+        chrono::FixedOffset::east_opt(self.offset().1.as_secs() as i32)
+            .unwrap()
     }
 
     /// Creates a [`Tz`] from a [`chrono::FixedOffset`].
     #[cfg(feature = "utils-chrono")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "utils-chrono")))]
     pub fn from_chrono_offset(offset: chrono::FixedOffset) -> Self {
-        Self {
-            offset_from_utc_in_seconds: offset.local_minus_utc(),
-        }
+        Self { offset_from_utc_in_seconds: offset.local_minus_utc() }
     }
 }
 
@@ -85,11 +85,8 @@ impl<'a> FieldType<'a> for Tz {
             buffer.extend_from_slice(b"Z");
             1
         } else {
-            let sign = if self.offset_from_utc_in_seconds > 0 {
-                b'+'
-            } else {
-                b'-'
-            };
+            let sign =
+                if self.offset_from_utc_in_seconds > 0 { b'+' } else { b'-' };
             let hour = self.offset().1.as_secs() as u32 / HOUR;
             buffer.extend_from_slice(&[
                 sign,
@@ -129,16 +126,20 @@ impl<'a> FieldType<'a> for Tz {
         }
         match data.len() {
             3 => {
-                let hour = ascii_digit_to_u32(data[1], 10) + ascii_digit_to_u32(data[2], 1);
+                let hour = ascii_digit_to_u32(data[1], 10)
+                    + ascii_digit_to_u32(data[2], 1);
                 Ok(Self {
                     offset_from_utc_in_seconds: sign * (hour * HOUR) as i32,
                 })
             }
             6 => {
-                let hour = ascii_digit_to_u32(data[1], 10) + ascii_digit_to_u32(data[2], 1);
-                let minute = ascii_digit_to_u32(data[4], 10) + ascii_digit_to_u32(data[5], 1);
+                let hour = ascii_digit_to_u32(data[1], 10)
+                    + ascii_digit_to_u32(data[2], 1);
+                let minute = ascii_digit_to_u32(data[4], 10)
+                    + ascii_digit_to_u32(data[5], 1);
                 Ok(Self {
-                    offset_from_utc_in_seconds: sign * (hour * HOUR + minute * MINUTE) as i32,
+                    offset_from_utc_in_seconds: sign
+                        * (hour * HOUR + minute * MINUTE) as i32,
                 })
             }
             _ => Err(ERR_INVALID),
@@ -150,17 +151,21 @@ impl<'a> FieldType<'a> for Tz {
             1 => Ok(Self::UTC),
             3 => {
                 let sign = if data[0] == b'+' { 1 } else { -1 };
-                let hour = ascii_digit_to_u32(data[1], 10) + ascii_digit_to_u32(data[2], 1);
+                let hour = ascii_digit_to_u32(data[1], 10)
+                    + ascii_digit_to_u32(data[2], 1);
                 Ok(Self {
                     offset_from_utc_in_seconds: sign * (hour * HOUR) as i32,
                 })
             }
             6 => {
                 let sign = if data[0] == b'+' { 1 } else { -1 };
-                let hour = ascii_digit_to_u32(data[1], 10) + ascii_digit_to_u32(data[2], 1);
-                let minute = ascii_digit_to_u32(data[4], 10) + ascii_digit_to_u32(data[5], 1);
+                let hour = ascii_digit_to_u32(data[1], 10)
+                    + ascii_digit_to_u32(data[2], 1);
+                let minute = ascii_digit_to_u32(data[4], 10)
+                    + ascii_digit_to_u32(data[5], 1);
                 Ok(Self {
-                    offset_from_utc_in_seconds: sign * (hour * HOUR + minute * MINUTE) as i32,
+                    offset_from_utc_in_seconds: sign
+                        * (hour * HOUR + minute * MINUTE) as i32,
                 })
             }
             _ => Err(ERR_INVALID),
@@ -170,10 +175,6 @@ impl<'a> FieldType<'a> for Tz {
 
 const fn u32_digit_to_ascii(digit: u32) -> u8 {
     digit as u8 + b'0'
-}
-
-const fn ascii_digit_to_u32(digit: u8, multiplier: u32) -> u32 {
-    (digit as u32).wrapping_sub(b'0' as u32) * multiplier
 }
 
 #[cfg(test)]

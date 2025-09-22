@@ -1,7 +1,7 @@
-use minifix_dictionary::{self as dict, TagU32};
 use fnv::FnvHashSet;
 use heck::{ToPascalCase, ToShoutySnakeCase};
 use indoc::formatdoc;
+use minifix_dictionary::{self as dict, TagU32};
 
 const MINIFIX_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -30,7 +30,10 @@ pub fn generated_code_notice() -> String {
 
 /// Generates the Rust code for an `enum` that has variants that map 1:1 the
 /// available values for `field`.
-pub fn codegen_field_type_enum(field: dict::Field, settings: &Settings) -> String {
+pub fn codegen_field_type_enum(
+    field: dict::Field,
+    settings: &Settings,
+) -> String {
     let derives = settings.derives_for_allowed_values.join(", ");
     let attributes = settings.attributes_for_allowed_values.join("\n");
     let variants = field
@@ -55,7 +58,10 @@ pub fn codegen_field_type_enum(field: dict::Field, settings: &Settings) -> Strin
     )
 }
 
-fn codegen_field_type_enum_variant(allowed_value: dict::FieldEnum, settings: &Settings) -> String {
+fn codegen_field_type_enum_variant(
+    allowed_value: dict::FieldEnum,
+    settings: &Settings,
+) -> String {
     let mut identifier = allowed_value.description().to_pascal_case();
     let identifier_needs_prefix = !allowed_value
         .description()
@@ -149,25 +155,26 @@ pub fn codegen_field_definition_struct(
 ) -> String {
     let mut header = FnvHashSet::default();
     let mut trailer = FnvHashSet::default();
-    for item in fix_dictionary
-        .component_by_name("StandardHeader")
-        .unwrap()
-        .items()
+    for item in
+        fix_dictionary.component_by_name("StandardHeader").unwrap().items()
     {
         if let dict::LayoutItemKind::Field(f) = item.kind() {
             header.insert(f.tag());
         }
     }
-    for item in fix_dictionary
-        .component_by_name("StandardTrailer")
-        .unwrap()
-        .items()
+    for item in
+        fix_dictionary.component_by_name("StandardTrailer").unwrap().items()
     {
         if let dict::LayoutItemKind::Field(f) = item.kind() {
             trailer.insert(f.tag());
         }
     }
-    gen_field_definition_with_hashsets(fix_dictionary, &header, &trailer, field)
+    gen_field_definition_with_hashsets(
+        fix_dictionary,
+        &header,
+        &trailer,
+        field,
+    )
 }
 
 /// Generates `const` implementors of
@@ -184,7 +191,10 @@ pub fn codegen_field_definition_struct(
 /// The Rust code will be free of any leading and trailing whitespace.
 /// An effort is made to provide good formatting, but users shouldn't rely on it
 /// and assume that formatting might be bad.
-pub fn gen_definitions(fix_dictionary: &dict::Dictionary, settings: &Settings) -> String {
+pub fn gen_definitions(
+    fix_dictionary: &dict::Dictionary,
+    settings: &Settings,
+) -> String {
     let enums = fix_dictionary
         .fields()
         .iter()
@@ -198,7 +208,8 @@ pub fn gen_definitions(fix_dictionary: &dict::Dictionary, settings: &Settings) -
         .map(|field| codegen_field_definition_struct(fix_dictionary, *field))
         .collect::<Vec<String>>()
         .join("\n\n");
-    let top_comment = onixs_link_to_dictionary(fix_dictionary.version()).unwrap_or_default();
+    let top_comment =
+        onixs_link_to_dictionary(fix_dictionary.version()).unwrap_or_default();
     let code = formatdoc!(
         r#"
             {notice}
@@ -228,7 +239,10 @@ fn indent_string(s: &str, prefix: &str) -> String {
         .join("\n")
 }
 
-fn onixs_link_to_field(fix_version: &str, field: dict::Field) -> Option<String> {
+fn onixs_link_to_field(
+    fix_version: &str,
+    field: dict::Field,
+) -> Option<String> {
     Some(format!(
         "https://www.onixs.biz/fix-dictionary/{}/tagnum_{}.html",
         onixs_dictionary_id(fix_version)?,
@@ -294,7 +308,9 @@ fn gen_field_definition_with_hashsets(
         name = field.name(),
         tag = tag,
         field_location = field_location,
-        data_type = <&'static str as From<dict::FixDatatype>>::from(field.data_type().basetype()),
+        data_type = <&'static str as From<dict::FixDatatype>>::from(
+            field.data_type().basetype()
+        ),
     )
 }
 

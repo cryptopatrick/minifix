@@ -57,7 +57,10 @@ impl HeartbeatRule {
     /// assert!(rule.validate(&Duration::from_secs(1000)).is_ok());
     /// assert!(rule.validate(&Duration::from_secs(1)).is_ok());
     /// ```
-    pub fn validate(&self, proposal: &Duration) -> std::result::Result<(), String> {
+    pub fn validate(
+        &self,
+        proposal: &Duration,
+    ) -> std::result::Result<(), String> {
         match self {
             HeartbeatRule::Exact(expected) => {
                 if proposal == expected {
@@ -94,8 +97,9 @@ mod test {
     #[test]
     fn heartebeat_validation() {
         let rule_exact_1 = HeartbeatRule::Exact(Duration::from_secs(1));
-        let rule_range_5_30 =
-            HeartbeatRule::Range(Duration::from_secs(5)..=Duration::from_secs(30));
+        let rule_range_5_30 = HeartbeatRule::Range(
+            Duration::from_secs(5)..=Duration::from_secs(30),
+        );
         let rule_any = HeartbeatRule::Any;
 
         assert!(rule_exact_1.validate(&Duration::from_secs(1)).is_ok());

@@ -53,10 +53,16 @@ pub trait Backend: Clone {
     }
 
     /// Callback for processing incoming FIX application messages.
-    fn on_inbound_app_message(&mut self, message: Message<&[u8]>) -> Result<(), Self::Error>;
+    fn on_inbound_app_message(
+        &mut self,
+        message: Message<&[u8]>,
+    ) -> Result<(), Self::Error>;
 
     /// Callback for post-processing outbound FIX messages.
-    fn on_outbound_message(&mut self, message: &[u8]) -> Result<(), Self::Error>;
+    fn on_outbound_message(
+        &mut self,
+        message: &[u8],
+    ) -> Result<(), Self::Error>;
 
     /// Callback for processing incoming FIX messages.
     fn on_inbound_message(
@@ -64,15 +70,14 @@ pub trait Backend: Clone {
         message: Message<&[u8]>,
         is_app: bool,
     ) -> Result<(), Self::Error> {
-        if is_app {
-            self.on_inbound_app_message(message)
-        } else {
-            Ok(())
-        }
+        if is_app { self.on_inbound_app_message(message) } else { Ok(()) }
     }
 
     /// Callback for processing `ResendRequest` messages.
-    fn on_resend_request(&mut self, range: Range<u64>) -> Result<(), Self::Error>;
+    fn on_resend_request(
+        &mut self,
+        range: Range<u64>,
+    ) -> Result<(), Self::Error>;
 
     /// Callback for additional logic to execute after a valid [`FixConnection`]
     /// is established with the counterparty.

@@ -79,7 +79,9 @@ impl<'a> FieldType<'a> for Timestamp {
     where
         B: Buffer,
     {
-        self.date().serialize(buffer) + b"-".serialize(buffer) + self.time().serialize(buffer)
+        self.date().serialize(buffer)
+            + b"-".serialize(buffer)
+            + self.time().serialize(buffer)
     }
 
     fn deserialize(data: &'a [u8]) -> Result<Self, Self::Error> {
@@ -104,6 +106,8 @@ mod test {
 
     #[quickcheck]
     fn verify_serialization_behavior(timestamp: Timestamp) -> bool {
-        crate::field_types::test_utility_verify_serialization_behavior(timestamp)
+        crate::field_types::test_utility_verify_serialization_behavior(
+            timestamp,
+        )
     }
 }

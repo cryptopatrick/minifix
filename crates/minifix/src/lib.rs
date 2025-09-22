@@ -78,7 +78,7 @@
 //! - [`https://fiximate.fixtrading.org`](https://fiximate.fixtrading.org).
 //! - [`https://github.com/FIXTradingCommunity`](https://github.com/FIXTradingCommunity).
 //! - [`https://forum.fixtrading.org`](https://forum.fixtrading.org).
-//! 
+//!
 
 // crates/minifix/src/lib.rs
 
@@ -163,7 +163,11 @@ where
     }
 
     /// Writes `self` to `buffer` using custom serialization `settings`.
-    fn serialize_with<B>(&self, buffer: &mut B, settings: Self::SerializeSettings) -> usize
+    fn serialize_with<B>(
+        &self,
+        buffer: &mut B,
+        settings: Self::SerializeSettings,
+    ) -> usize
     where
         B: Buffer;
 
@@ -197,7 +201,8 @@ where
     /// [`FieldType`] implementors that are guaranteed to be representable with
     /// valid UTF-8 (like numbers with ASCII digits).
     fn to_string(&self) -> String {
-        String::from_utf8(self.to_bytes()).expect("Invalid UTF-8 representation of FIX field.")
+        String::from_utf8(self.to_bytes())
+            .expect("Invalid UTF-8 representation of FIX field.")
     }
 }
 
@@ -254,12 +259,20 @@ pub trait SetField<F> {
     where
         V: FieldType<'a>,
     {
-        self.set_with(field, value, <V::SerializeSettings as Default>::default())
+        self.set_with(
+            field,
+            value,
+            <V::SerializeSettings as Default>::default(),
+        )
     }
 
     /// Writes a field with custom [`FieldType::SerializeSettings`].
-    fn set_with<'a, V>(&'a mut self, field: F, value: V, setting: V::SerializeSettings)
-    where
+    fn set_with<'a, V>(
+        &'a mut self,
+        field: F,
+        value: V,
+        setting: V::SerializeSettings,
+    ) where
         V: FieldType<'a>;
 }
 

@@ -1,9 +1,10 @@
+use super::FieldLengths;
 use crate::{Buffer, FieldType};
 use std::convert::TryInto;
-use super::FieldLengths;
 
 const ERR_LENGTH: &str = "Expected exactly three bytes for CheckSum.";
-const ERR_ASCII_DIGITS: &str = "Expected ASCII digits, found invalid characters.";
+const ERR_ASCII_DIGITS: &str =
+    "Expected ASCII digits, found invalid characters.";
 
 /// The result of a FIX checksum calculation (0-255).
 ///
@@ -43,7 +44,10 @@ impl<'a> FieldType<'a> for CheckSum {
     fn deserialize(data: &'a [u8]) -> Result<Self, Self::Error> {
         let digits = data.try_into().map_err(|_| ERR_LENGTH)?;
 
-        if is_ascii_digit(data[0]) & is_ascii_digit(data[1]) & is_ascii_digit(data[2]) {
+        if is_ascii_digit(data[0])
+            & is_ascii_digit(data[1])
+            & is_ascii_digit(data[2])
+        {
             Ok(checksum_from_digits(digits))
         } else {
             Err(ERR_ASCII_DIGITS)
@@ -112,6 +116,8 @@ mod test {
 
     #[quickcheck]
     fn verify_serialization_behavior(checksum: CheckSum) -> bool {
-        crate::field_types::test_utility_verify_serialization_behavior(checksum)
+        crate::field_types::test_utility_verify_serialization_behavior(
+            checksum,
+        )
     }
 }

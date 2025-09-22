@@ -14,7 +14,8 @@ pub fn heartbeat_range(a: u64, b: u64) -> String {
 }
 
 pub fn heartbeat_gt_0() -> String {
-    "Invalid HeartBtInt(108), expected value greater than 0 seconds".to_string()
+    "Invalid HeartBtInt(108), expected value greater than 0 seconds"
+        .to_string()
 }
 
 pub fn inbound_seqnum() -> String {

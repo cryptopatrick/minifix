@@ -1,6 +1,6 @@
-use crate::tagvalue::{DecodeError, DecoderStreaming, Message};
 use crate::StreamingDecoder;
-use futures::{select, AsyncRead, AsyncReadExt, FutureExt};
+use crate::tagvalue::{DecodeError, DecoderStreaming, Message};
+use futures::{AsyncRead, AsyncReadExt, FutureExt, select};
 use futures_timer::Delay;
 use std::io;
 use std::time::{Duration, Instant};
@@ -28,7 +28,11 @@ where
 {
     /// Creates a new [`LlEventLoop`] with the provided `decoder` and
     /// `heartbeat`. Events will be read from `input`.
-    pub fn new(decoder: DecoderStreaming<Vec<u8>>, input: I, heartbeat: Duration) -> Self {
+    pub fn new(
+        decoder: DecoderStreaming<Vec<u8>>,
+        input: I,
+        heartbeat: Duration,
+    ) -> Self {
         let heartbeat_soft_tolerance = heartbeat * 2;
         let heartbeat_hard_tolerance = heartbeat * 3;
         Self {
@@ -64,11 +68,16 @@ where
             }
 
             let now = Instant::now();
-            let mut timer_heartbeat = Delay::new(now - self.last_heartbeat + self.heartbeat).fuse();
-            let mut timer_test_request =
-                Delay::new(now - self.last_reset + self.heartbeat_soft_tolerance).fuse();
-            let mut timer_logout =
-                Delay::new(now - self.last_reset + self.heartbeat_hard_tolerance).fuse();
+            let mut timer_heartbeat =
+                Delay::new(now - self.last_heartbeat + self.heartbeat).fuse();
+            let mut timer_test_request = Delay::new(
+                now - self.last_reset + self.heartbeat_soft_tolerance,
+            )
+            .fuse();
+            let mut timer_logout = Delay::new(
+                now - self.last_reset + self.heartbeat_hard_tolerance,
+            )
+            .fuse();
             let mut read_result = self.input.read(buf).fuse();
 
             select! {
@@ -153,7 +162,9 @@ mod test {
     use tokio::net::{TcpListener, TcpStream};
     use tokio_util::compat::*;
 
-    async fn produce_events(events: Vec<(&'static [u8], Duration)>) -> TcpStream {
+    async fn produce_events(
+        events: Vec<(&'static [u8], Duration)>,
+    ) -> TcpStream {
         let tcp_listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let local_addr = tcp_listener.local_addr().unwrap();
 
@@ -182,7 +193,8 @@ mod test {
 
     #[tokio::test]
     async fn dead_input_triggers_logout() {
-        let mut event_loop = new_event_loop(vec![(b"8", Duration::from_secs(10))]).await;
+        let mut event_loop =
+            new_event_loop(vec![(b"8", Duration::from_secs(10))]).await;
         let event = event_loop.next_event().await;
         assert!(matches!(event, Some(LlEvent::Heartbeat)));
         let event = event_loop.next_event().await;

@@ -1,6 +1,6 @@
-use crate::{Buffer, FieldType};
-use crate::utils::encoding::{two_digits_to_ascii, four_digits_to_ascii};
 use super::FieldLengths;
+use crate::utils::encoding::{four_digits_to_ascii, two_digits_to_ascii};
+use crate::{Buffer, FieldType};
 
 const ERR_GENERIC: &str = "Invalid day or week format.";
 
@@ -34,8 +34,12 @@ impl MonthYear {
             let year_digits = four_digits_to_ascii(self.year());
             let month_digits = two_digits_to_ascii(self.month());
             [
-                year_digits[0], year_digits[1], year_digits[2], year_digits[3],
-                month_digits[0], month_digits[1],
+                year_digits[0],
+                year_digits[1],
+                year_digits[2],
+                year_digits[3],
+                month_digits[0],
+                month_digits[1],
                 day_or_week_1,
                 day_or_week_2,
             ]
@@ -162,17 +166,16 @@ impl<'a> FieldType<'a> for MonthYear {
             + from_digit(data[1]) as u32 * 100
             + from_digit(data[2]) as u32 * 10
             + from_digit(data[3]) as u32;
-        let month = from_digit(data[4]) as u32 * 10 + from_digit(data[5]) as u32;
+        let month =
+            from_digit(data[4]) as u32 * 10 + from_digit(data[5]) as u32;
         let day_or_week = if data[6] == b'w' {
             DayOrWeek::Week(from_digit(data[7]) as u32)
         } else {
-            DayOrWeek::Day(from_digit(data[6]) as u32 * 10 + from_digit(data[7]) as u32)
+            DayOrWeek::Day(
+                from_digit(data[6]) as u32 * 10 + from_digit(data[7]) as u32,
+            )
         };
-        Ok(Self {
-            year,
-            month,
-            day_or_week,
-        })
+        Ok(Self { year, month, day_or_week })
     }
 }
 
@@ -202,7 +205,8 @@ fn validate_year(data: &[u8]) -> bool {
 }
 
 fn validate_month(data: &[u8]) -> bool {
-    ((data[4] == b'0' && data[5] <= b'9') || (data[4] == b'1' && data[5] <= b'2'))
+    ((data[4] == b'0' && data[5] <= b'9')
+        || (data[4] == b'1' && data[5] <= b'2'))
         && data[5] >= b'0'
 }
 
@@ -246,7 +250,8 @@ mod test {
     fn can_deserialize_after_serializing(my: MonthYear) -> bool {
         let serialized = my.to_bytes();
         let deserialized = MonthYear::deserialize(&serialized[..]).unwrap();
-        let deserialized_lossy = MonthYear::deserialize_lossy(&serialized[..]).unwrap();
+        let deserialized_lossy =
+            MonthYear::deserialize_lossy(&serialized[..]).unwrap();
         deserialized == my && deserialized_lossy == my
     }
 }
