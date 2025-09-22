@@ -11,7 +11,7 @@ pub struct TzTimestamp {
 impl TzTimestamp {
     /// Returns the [`Timestamp`] (without timezone information) of `self`.
     pub fn timestamp(&self) -> Timestamp {
-        self.timestamp.clone()
+        self.timestamp
     }
 
     /// Returns the [`Tz`] timezone information of `self`.

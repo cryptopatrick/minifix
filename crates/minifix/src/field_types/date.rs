@@ -1,15 +1,6 @@
 use crate::{Buffer, FieldType};
 use std::convert::{TryFrom, TryInto};
-
-const LEN_IN_BYTES: usize = 8;
-
-const MAX_YEAR: u32 = 9999;
-const MAX_MONTH: u32 = 12;
-const MAX_DAY: u32 = 31;
-
-const MIN_YEAR: u32 = 0;
-const MIN_MONTH: u32 = 1;
-const MIN_DAY: u32 = 1;
+use super::{DateValidation, FieldLengths};
 
 const ERR_NOT_ASCII_DIGITS: &str = "Invalid characters, expected ASCII digits.";
 const ERR_LENGTH: &str = "Invalid length, expected 8 bytes (YYYYMMDD format).";
@@ -52,9 +43,9 @@ impl Date {
     /// assert!(Date::new(2021, 2, 31).is_some());
     /// ```
     pub fn new(year: u32, month: u32, day: u32) -> Option<Self> {
-        if (MIN_YEAR..=MAX_YEAR).contains(&year)
-            && (MIN_MONTH..=MAX_MONTH).contains(&month)
-            && (MIN_DAY..=MAX_DAY).contains(&day)
+        if (DateValidation::YEAR_MIN..=DateValidation::YEAR_MAX).contains(&year)
+            && (DateValidation::MONTH_MIN..=DateValidation::MONTH_MAX).contains(&month)
+            && (DateValidation::DAY_MIN..=DateValidation::DAY_MAX).contains(&day)
         {
             Some(Self { year, month, day })
         } else {
@@ -71,7 +62,7 @@ impl Date {
     ///
     /// assert_eq!(&Date::new(2021, 01, 01).unwrap().to_yyyymmdd(), b"20210101");
     /// ```
-    pub fn to_yyyymmdd(&self) -> [u8; LEN_IN_BYTES] {
+    pub fn to_yyyymmdd(&self) -> [u8; FieldLengths::DATE_BYTES] {
         fn digit_to_ascii(n: u32) -> u8 {
             (n + b'0' as u32) as u8
         }
@@ -138,7 +129,7 @@ impl<'a> FieldType<'a> for Date {
     }
 
     fn deserialize(data: &'a [u8]) -> Result<Self, Self::Error> {
-        if let Ok(bytes) = <[u8; LEN_IN_BYTES]>::try_from(data) {
+        if let Ok(bytes) = <[u8; FieldLengths::DATE_BYTES]>::try_from(data) {
             for byte in bytes.iter().copied() {
                 if !is_digit(byte) {
                     return Err(ERR_NOT_ASCII_DIGITS);
@@ -159,7 +150,7 @@ impl<'a> FieldType<'a> for Date {
     }
 }
 
-fn deserialize(data: [u8; LEN_IN_BYTES]) -> Result<Date, &'static str> {
+fn deserialize(data: [u8; FieldLengths::DATE_BYTES]) -> Result<Date, &'static str> {
     let year = ascii_digit_to_u32(data[0], 1000)
         + ascii_digit_to_u32(data[1], 100)
         + ascii_digit_to_u32(data[2], 10)

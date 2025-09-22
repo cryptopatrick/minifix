@@ -1,7 +1,6 @@
 use crate::{Buffer, FieldType};
 use std::convert::TryInto;
-
-const LEN_IN_BYTES: usize = 3;
+use super::FieldLengths;
 
 const ERR_LENGTH: &str = "Expected exactly three bytes for CheckSum.";
 const ERR_ASCII_DIGITS: &str = "Expected ASCII digits, found invalid characters.";
@@ -38,7 +37,7 @@ impl<'a> FieldType<'a> for CheckSum {
             digit_to_ascii((self.0 / 10) % 10),
             digit_to_ascii(self.0 % 10),
         ]);
-        LEN_IN_BYTES
+        FieldLengths::CHECKSUM_BYTES
     }
 
     fn deserialize(data: &'a [u8]) -> Result<Self, Self::Error> {
@@ -59,7 +58,7 @@ impl<'a> FieldType<'a> for CheckSum {
     }
 }
 
-fn checksum_from_digits(data: [u8; LEN_IN_BYTES]) -> CheckSum {
+fn checksum_from_digits(data: [u8; FieldLengths::CHECKSUM_BYTES]) -> CheckSum {
     let digit1 = ascii_digit_to_u8(data[0], 100);
     let digit2 = ascii_digit_to_u8(data[1], 10);
     let digit3 = ascii_digit_to_u8(data[2], 1);

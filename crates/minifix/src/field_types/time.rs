@@ -1,19 +1,9 @@
 use crate::{Buffer, FieldType};
+use crate::utils::encoding::two_digits_to_ascii;
+use crate::utils::validation::validate_time_components;
+use super::FieldLengths;
 
 const ERR_INVALID: &str = "Invalid time.";
-
-const LEN_IN_BYTES_NO_MILLI: usize = 8;
-const LEN_IN_BYTES_WITH_MILLI: usize = 12;
-
-const MAX_HOUR: u32 = 23;
-const MAX_MINUTE: u32 = 59;
-const MAX_SECOND: u32 = 60; // Leap seconds.
-const MAX_MILLISECOND: u32 = 999;
-
-const MIN_HOUR: u32 = 0;
-const MIN_MINUTE: u32 = 0;
-const MIN_SECOND: u32 = 0;
-const MIN_MILLISECOND: u32 = 0;
 
 /// Canonical data field (DTF) for
 /// [`FixDatatype::UtcTimeOnly`](crate::dict::FixDatatype::UtcTimeOnly).
@@ -28,10 +18,7 @@ pub struct Time {
 impl Time {
     /// Creates a new time value from its components, with milliseconds.
     pub fn from_hmsm(hour: u32, minute: u32, second: u32, milli: u32) -> Option<Self> {
-        if (MIN_HOUR..=MAX_HOUR).contains(&hour)
-            && (MIN_MINUTE..=MAX_MINUTE).contains(&minute)
-            && (MIN_SECOND..=MAX_SECOND).contains(&second)
-            && (MIN_MILLISECOND..=MAX_MILLISECOND).contains(&milli)
+        if validate_time_components(hour, minute, second, milli)
         {
             Some(Self {
                 hour,
@@ -45,21 +32,20 @@ impl Time {
     }
 
     /// Encodes `self` as a FIX field value in byte array.
-    pub const fn to_bytes(&self) -> [u8; LEN_IN_BYTES_WITH_MILLI] {
-        [
-            (self.hour() / 10) as u8 + b'0',
-            (self.hour() % 10) as u8 + b'0',
-            b':',
-            (self.minute() / 10) as u8 + b'0',
-            (self.minute() % 10) as u8 + b'0',
-            b':',
-            (self.second() / 10) as u8 + b'0',
-            (self.second() % 10) as u8 + b'0',
-            b'.',
-            (self.milli() / 100) as u8 + b'0',
-            ((self.milli() / 10) % 10) as u8 % 10 + b'0',
-            (self.milli() % 10) as u8 + b'0',
-        ]
+    pub const fn to_bytes(&self) -> [u8; FieldLengths::TIME_BYTES_WITH_MILLI] {
+        {
+            let hour_digits = two_digits_to_ascii(self.hour());
+            let minute_digits = two_digits_to_ascii(self.minute());
+            let second_digits = two_digits_to_ascii(self.second());
+            [
+                hour_digits[0], hour_digits[1], b':',
+                minute_digits[0], minute_digits[1], b':',
+                second_digits[0], second_digits[1], b'.',
+                (self.milli() / 100) as u8 + b'0',
+                ((self.milli() / 10) % 10) as u8 + b'0',
+                (self.milli() % 10) as u8 + b'0',
+            ]
+        }
     }
 
     /// Returns the hour of `self`.
@@ -162,14 +148,14 @@ impl<'a> FieldType<'a> for Time {
 
     fn deserialize(data: &'a [u8]) -> Result<Self, Self::Error> {
         let mut milli = 0;
-        if data.len() == LEN_IN_BYTES_WITH_MILLI {
+        if data.len() == FieldLengths::TIME_BYTES_WITH_MILLI {
             milli = ascii_digit_to_u32(data[9], 100)
                 + ascii_digit_to_u32(data[10], 10)
                 + ascii_digit_to_u32(data[11], 1);
             if data[8] != b'.' {
                 return Err(ERR_INVALID);
             }
-        } else if data.len() != LEN_IN_BYTES_NO_MILLI {
+        } else if data.len() != FieldLengths::TIME_BYTES_NO_MILLI {
             return Err(ERR_INVALID);
         }
         let digits_are_ok = data[2] == b':'

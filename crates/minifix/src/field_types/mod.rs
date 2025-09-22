@@ -68,6 +68,7 @@ mod timestamp;
 mod tz;
 mod tz_time;
 mod tz_timestamp;
+mod validation_config;
 
 #[cfg(feature = "utils-chrono")]
 mod utils_chrono;
@@ -87,6 +88,7 @@ pub use timestamp::Timestamp;
 pub use tz::Tz;
 pub use tz_time::TzTime;
 pub use tz_timestamp::TzTimestamp;
+pub use validation_config::{TimeValidation, DateValidation, FieldLengths};
 
 /// Type alias for ISO 3166-1 alpha-2 strings (two-letter country codes).
 pub type Country = [u8; 2];
@@ -99,6 +101,7 @@ pub type Exchange = [u8; 4];
 pub(crate) const ERR_UTF8: &str = "Invalid byte sequence; expected UTF-8 valid bytes.";
 pub(crate) const ERR_INT_INVALID: &str = "Invalid integer digits.";
 pub(crate) const ERR_TIME: &str = "Invalid time.";
+#[cfg(any(feature = "utils-decimal", feature = "utils-rust-decimal"))]
 pub(crate) const ERR_DECIMAL: &str = "Invalid decimal number.";
 
 /// Zero-padding for integers; see [`FieldType::SerializeSettings`].

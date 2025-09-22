@@ -104,7 +104,7 @@
 
 mod buffer;
 mod field_access;
-mod utils;
+pub mod utils;
 
 pub mod definitions;
 pub mod field_types;

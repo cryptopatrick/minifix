@@ -55,7 +55,7 @@ where
     /// assert_eq!(message.begin_string(), b"FIX.4.2");
     /// ```
     pub fn begin_string(&self) -> &[u8] {
-        &self.as_bytes()[self.begin_string.clone()]
+        &self.as_bytes()[self.begin_string.start..self.begin_string.end]
     }
 
     /// Returns an immutable reference to the payload of `self`. In this
@@ -81,7 +81,7 @@ where
     /// assert_eq!(message.payload().len(), 42);
     /// ```
     pub fn payload(&self) -> &[u8] {
-        &self.as_bytes()[self.payload.clone()]
+        &self.as_bytes()[self.payload.start..self.payload.end]
     }
 }
 
@@ -285,7 +285,7 @@ impl HeaderInfo {
         i += find_byte(separator)?;
         info.field_1.end = i;
 
-        for byte in &data[info.field_1.clone()] {
+        for byte in &data[info.field_1.start..info.field_1.end] {
             info.nominal_body_len = info
                 .nominal_body_len
                 .wrapping_mul(10)

@@ -1,6 +1,6 @@
 use crate::{Buffer, FieldType};
-
-const LEN_IN_BYTES: usize = 8;
+use crate::utils::encoding::{two_digits_to_ascii, four_digits_to_ascii};
+use super::FieldLengths;
 
 const ERR_GENERIC: &str = "Invalid day or week format.";
 
@@ -21,7 +21,7 @@ enum DayOrWeek {
 
 impl MonthYear {
     /// Converts `self` to a byte array.
-    pub fn to_yyyymmww(&self) -> [u8; LEN_IN_BYTES] {
+    pub fn to_yyyymmww(&self) -> [u8; FieldLengths::MONTHYEAR_BYTES] {
         let day_or_week_1 = match self.day_or_week {
             DayOrWeek::Day(day) => (day / 10) as u8 + b'0',
             DayOrWeek::Week(_) => b'w',
@@ -30,16 +30,16 @@ impl MonthYear {
             DayOrWeek::Day(day) => (day % 10) as u8 + b'0',
             DayOrWeek::Week(week) => week as u8 + b'0',
         };
-        [
-            (self.year() / 1000) as u8 + b'0',
-            ((self.year() / 100) % 10) as u8 + b'0',
-            ((self.year() / 10) % 10) as u8 + b'0',
-            (self.year() % 10) as u8 + b'0',
-            (self.month() / 10) as u8 + b'0',
-            (self.month() % 10) as u8 + b'0',
-            day_or_week_1,
-            day_or_week_2,
-        ]
+        {
+            let year_digits = four_digits_to_ascii(self.year());
+            let month_digits = two_digits_to_ascii(self.month());
+            [
+                year_digits[0], year_digits[1], year_digits[2], year_digits[3],
+                month_digits[0], month_digits[1],
+                day_or_week_1,
+                day_or_week_2,
+            ]
+        }
     }
 
     /// Returns the year of `self`.

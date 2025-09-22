@@ -95,7 +95,7 @@ impl Decoder {
     ///
     /// # Examples
     ///
-    /// ```no_run FIXME
+    /// ```no_run
     /// use minifix::tagvalue::{Config, Decoder};
     /// use minifix::prelude::*;
     ///
@@ -222,7 +222,7 @@ impl Decoder {
                 .state
                 .add_group(tag, self.builder.field_locators.len() - 1, field_value);
         } else if fix_type == Some(&FixDatatype::Length) {
-            // FIXME
+            // TODO: Handle Length field data validation
             let last_field_locator = self
                 .builder
                 .field_locators
@@ -679,7 +679,7 @@ where
         for (tag, _value) in self.fields() {
             serializer.emit_u32(key, tag.get())?;
             serializer.emit_char(key, '=')?;
-            // FIXME
+            // TODO: Emit actual field value instead of placeholder
             serializer.emit_char(key, '?')?;
             serializer.emit_char(key, '|')?;
         }

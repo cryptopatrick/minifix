@@ -9,3 +9,6 @@ minifix = { path = "../../crates/minifix", features = ["codegen"] }
 
 [build-dependencies]
 minifix = { path = "../../crates/minifix", features = ["codegen"] }
+minifix-dictionary = { path = "../../crates/minifix-dictionary" }
+heck = "0.4"
+chrono = "0.4"
