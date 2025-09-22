@@ -1,0 +1,27 @@
+[package]
+name = "minifix"
+version = "0.1.0"
+edition = "2024"
+authors = ["CryptoPatrick <cryptopatrick@gmail.com>"]
+
+###############################################################################
+description = "A bare essentials library for Financial Information Exchange (FIX)"
+documentation = "https://docs.rs/minifix"
+homepage = "https://github.com/cryptopatrick/minifix"
+repository = "https://github.com/cryptopatrick/minifix"
+readme = "README.md"
+keywords = ["<KEYWORD1>", "<KEYWORD2>" ]
+license = "MIT"
+autotests = false
+
+###############################################################################
+[lib]
+name = "minifix"
+path = "src/lib.rs"
+
+[[test]]
+name = "tests"
+path = "tests/test.rs"
+
+###############################################################################
+[dependencies]
