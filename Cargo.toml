@@ -3,7 +3,6 @@ members = ["crates/*", "examples/*", "tests/*"]
 resolver = "2"
 
 [workspace.package]
-name = "minifix"
 version = "0.1.0"
 edition = "2024"
 authors = ["CryptoPatrick <cryptopatrick@gmail.com>"]
@@ -18,7 +17,6 @@ readme = "README.md"
 keywords = ["fix"]
 categories = ["finance"]
 license = "MIT"
-autotests = false
 
 ###############################################################################
 
