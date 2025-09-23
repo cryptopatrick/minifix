@@ -118,6 +118,10 @@ pub mod tagvalue;
 #[cfg_attr(doc_cfg, doc(cfg(feature = "json-encoding")))]
 pub mod json;
 
+#[cfg(feature = "utils-tokio")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "utils-tokio")))]
+pub mod tokio;
+
 pub use buffer::{Buffer, BufferWriter};
 #[cfg(feature = "codegen")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "codegen")))]

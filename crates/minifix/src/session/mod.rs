@@ -15,6 +15,13 @@ mod heartbeat_rule;
 mod resend_request_range;
 mod seq_numbers;
 
+#[cfg(feature = "utils-tokio")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "utils-tokio")))]
+pub mod tokio_connection;
+#[cfg(feature = "utils-tokio")]
+#[cfg_attr(doc_cfg, doc(cfg(feature = "utils-tokio")))]
+pub mod tokio_event_loop;
+
 use crate::tagvalue::Message;
 use crate::{FieldType, SetField};
 pub use config::{Config, Configure};

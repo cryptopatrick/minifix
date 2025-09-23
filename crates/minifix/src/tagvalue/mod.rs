@@ -54,9 +54,9 @@ pub use encoder::{Encoder, EncoderHandle};
 pub use raw_decoder::{RawDecoder, RawDecoderStreaming, RawFrame};
 
 #[cfg(feature = "utils-tokio")]
-mod tokio_decoder;
+pub mod tokio_decoder;
 #[cfg(feature = "utils-tokio")]
-pub use tokio_decoder::TokioDecoder;
+pub use tokio_decoder::{TokioDecoder, TokioEncoder, TokioRawDecoder};
 
 /// The type returned in the event of an error during message decoding.
 #[derive(Debug, thiserror::Error)]
