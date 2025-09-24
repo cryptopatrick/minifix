@@ -1,8 +1,10 @@
 use super::config::TokioFixConfig;
-use crate::session::tokio_connection::{TokioAppChannels, TokioAppHandler, TokioFixConnection};
-use crate::session::Backend;
-use crate::tagvalue::{Decoder, Message};
 use crate::Dictionary;
+use crate::session::Backend;
+use crate::session::tokio_connection::{
+    TokioAppChannels, TokioAppHandler, TokioFixConnection,
+};
+use crate::tagvalue::{Decoder, Message};
 use std::error::Error;
 use std::fmt;
 use tokio::net::TcpStream;
@@ -23,11 +25,7 @@ pub struct TokioFixClient {
 impl TokioFixClient {
     /// Creates a new Tokio FIX client with the specified configuration and dictionary.
     pub fn new(config: TokioFixConfig, dictionary: Dictionary) -> Self {
-        Self {
-            config,
-            dictionary,
-            backend: SimpleBackend::new(),
-        }
+        Self { config, dictionary, backend: SimpleBackend::new() }
     }
 
     /// Starts the FIX client using the provided TCP stream.
@@ -40,12 +38,15 @@ impl TokioFixClient {
     ) -> Result<TokioAppChannels, Box<dyn Error + Send + Sync>> {
         let decoder = Decoder::new(self.dictionary.clone()).streaming(vec![]);
         let (app_handler, app_channels) = TokioAppHandler::new();
-        
-        let mut connection = TokioFixConnection::new(self.config.clone(), self.backend.clone());
-        
+
+        let mut connection =
+            TokioFixConnection::new(self.config.clone(), self.backend.clone());
+
         // Start the connection in a background task
         let _connection_handle = tokio::spawn(async move {
-            connection.start_with_stream(stream, decoder, Some(app_handler)).await
+            connection
+                .start_with_stream(stream, decoder, Some(app_handler))
+                .await
         });
 
         // Return the app channels for the application to use
@@ -56,15 +57,24 @@ impl TokioFixClient {
     pub async fn start_with_handle(
         &mut self,
         stream: TcpStream,
-    ) -> Result<(TokioAppChannels, tokio::task::JoinHandle<Result<(), Box<dyn Error + Send + Sync>>>), Box<dyn Error + Send + Sync>> {
+    ) -> Result<
+        (
+            TokioAppChannels,
+            tokio::task::JoinHandle<Result<(), Box<dyn Error + Send + Sync>>>,
+        ),
+        Box<dyn Error + Send + Sync>,
+    > {
         let decoder = Decoder::new(self.dictionary.clone()).streaming(vec![]);
         let (app_handler, app_channels) = TokioAppHandler::new();
-        
-        let mut connection = TokioFixConnection::new(self.config.clone(), self.backend.clone());
-        
+
+        let mut connection =
+            TokioFixConnection::new(self.config.clone(), self.backend.clone());
+
         // Start the connection in a background task
         let connection_handle = tokio::spawn(async move {
-            connection.start_with_stream(stream, decoder, Some(app_handler)).await
+            connection
+                .start_with_stream(stream, decoder, Some(app_handler))
+                .await
         });
 
         Ok((app_channels, connection_handle))
@@ -88,7 +98,7 @@ impl SimpleTokioFixClient {
     /// use tokio::net::TcpStream;
     ///
     /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     ///     let stream = TcpStream::connect("127.0.0.1:9878").await?;
     ///     let channels = SimpleTokioFixClient::connect(
     ///         stream,
@@ -98,7 +108,7 @@ impl SimpleTokioFixClient {
     ///
     ///     // Use channels.inbound_rx to receive messages
     ///     // Use channels.outbound_tx to send messages
-    ///     
+    ///
     ///     Ok(())
     /// }
     /// ```
@@ -111,7 +121,7 @@ impl SimpleTokioFixClient {
             .sender_comp_id(sender_comp_id)
             .target_comp_id(target_comp_id)
             .build();
-        
+
         let mut client = TokioFixClient::new(config, Dictionary::fix44());
         client.start(stream).await
     }
@@ -140,12 +150,18 @@ impl Backend for SimpleBackend {
         b"TARGET"
     }
 
-    fn on_inbound_app_message(&mut self, _message: Message<&[u8]>) -> Result<(), Self::Error> {
+    fn on_inbound_app_message(
+        &mut self,
+        _message: Message<&[u8]>,
+    ) -> Result<(), Self::Error> {
         // Basic implementation - just accept all messages
         Ok(())
     }
 
-    fn on_outbound_message(&mut self, _message: &[u8]) -> Result<(), Self::Error> {
+    fn on_outbound_message(
+        &mut self,
+        _message: &[u8],
+    ) -> Result<(), Self::Error> {
         // Basic implementation - just accept all messages
         Ok(())
     }
@@ -155,7 +171,10 @@ impl Backend for SimpleBackend {
         Ok(())
     }
 
-    fn on_resend_request(&mut self, _range: std::ops::Range<u64>) -> Result<(), Self::Error> {
+    fn on_resend_request(
+        &mut self,
+        _range: std::ops::Range<u64>,
+    ) -> Result<(), Self::Error> {
         // Basic implementation
         Ok(())
     }
@@ -216,7 +235,7 @@ mod test {
             .target_comp_id("TEST_TARGET")
             .heartbeat_interval(Duration::from_secs(30))
             .build();
-        
+
         let client = TokioFixClient::new(config, Dictionary::fix44());
         assert_eq!(client.config.sender_comp_id, "TEST_SENDER");
         assert_eq!(client.config.target_comp_id, "TEST_TARGET");

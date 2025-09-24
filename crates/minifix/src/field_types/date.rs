@@ -109,7 +109,7 @@ impl Date {
         // Convert NaiveDate to NaiveDateTime at start of day, then to UTC DateTime
         Some(chrono::DateTime::from_naive_utc_and_offset(
             naive.and_hms_opt(0, 0, 0)?,
-            chrono::Utc
+            chrono::Utc,
         ))
     }
 

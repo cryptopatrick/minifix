@@ -67,9 +67,9 @@ full = [
 bytes = { version = "1", optional = true }
 chrono = "0.4"
 decimal = { version = "2", optional = true }
-minifix-codegen = { version = "0.1", path = "../minifix-codegen", optional = true }
-minifix-derive = { version = "0.1", path = "../minifix-derive" }
-minifix-dictionary = { version = "0.1", path = "../minifix-dictionary" }
+minifix-codegen = { version = "0.3", path = "../minifix-codegen", optional = true }
+minifix-derive = { version = "0.3", path = "../minifix-derive" }
+minifix-dictionary = { version = "0.3", path = "../minifix-dictionary" }
 futures = "0.3"
 futures-timer = "3"
 memchr = "2"
@@ -85,8 +85,8 @@ uuid = { version = "1", features = ["v4"] }
 
 [build-dependencies]
 chrono = "0.4"
-minifix-codegen = { version = "0.1", path = "../minifix-codegen" }
-minifix-dictionary = { version = "0.1", path = "../minifix-dictionary" }
+minifix-codegen = { version = "0.3", path = "../minifix-codegen" }
+minifix-dictionary = { version = "0.3", path = "../minifix-dictionary" }
 lazy_static = "1"
 quick-xml = "0.31"
 roxmltree = "0.19"

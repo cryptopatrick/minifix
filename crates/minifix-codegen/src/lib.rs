@@ -286,9 +286,7 @@ fn gen_field_definition_with_hashsets(
     };
     let doc_link = onixs_link_to_field(fix_dictionary.version(), field);
     let doc = if let Some(doc_link) = doc_link {
-        format!(
-            "/// Field attributes for [`{name} <{tag}>`]({doc_link})."
-        )
+        format!("/// Field attributes for [`{name} <{tag}>`]({doc_link}).")
     } else {
         format!("/// Field attributes for `{name} <{tag}>`.")
     };

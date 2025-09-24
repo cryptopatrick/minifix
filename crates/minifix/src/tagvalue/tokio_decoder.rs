@@ -17,9 +17,7 @@ pub struct TokioRawDecoder {
 impl TokioRawDecoder {
     /// Creates a new TokioRawDecoder.
     pub fn new() -> Self {
-        Self {
-            raw_decoder: RawDecoder::new(),
-        }
+        Self { raw_decoder: RawDecoder::new() }
     }
 }
 
@@ -33,16 +31,19 @@ impl codec::Decoder for TokioRawDecoder {
     type Item = RawFrame<Bytes>;
     type Error = DecodeError;
 
-    fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
+    fn decode(
+        &mut self,
+        src: &mut BytesMut,
+    ) -> Result<Option<Self::Item>, Self::Error> {
         // Try to find a complete message in the buffer
         if let Some(message_len) = self.find_complete_message(src)? {
             // Split off the complete message
             let message_data = src.split_to(message_len);
-            
+
             // Create frozen data first
             let frozen_data = message_data.freeze();
             let frozen_data_clone = frozen_data.clone();
-            
+
             // Decode the message to get the ranges
             let result = self.raw_decoder.decode(&frozen_data[..]);
             match result {
@@ -53,7 +54,7 @@ impl codec::Decoder for TokioRawDecoder {
                         begin_string: raw_frame.begin_string,
                         payload: raw_frame.payload,
                     }))
-                },
+                }
                 Err(e) => Err(e),
             }
         } else {
@@ -66,7 +67,10 @@ impl codec::Decoder for TokioRawDecoder {
 impl TokioRawDecoder {
     /// Attempts to find a complete FIX message in the buffer.
     /// Returns the length of the complete message if found.
-    fn find_complete_message(&self, src: &BytesMut) -> Result<Option<usize>, DecodeError> {
+    fn find_complete_message(
+        &self,
+        src: &BytesMut,
+    ) -> Result<Option<usize>, DecodeError> {
         // Look for the pattern "8=...9=NNN" to extract body length
         if src.len() < 10 {
             return Ok(None); // Need at least "8=X|9=N|" pattern
@@ -74,40 +78,43 @@ impl TokioRawDecoder {
 
         // Find the body length field (tag 9)
         let separator = self.raw_decoder.config().separator;
-        
+
         // Simple state machine to parse the header
         let mut pos = 0;
         let mut in_body_length = false;
         let mut body_length = 0u32;
         let mut body_length_end = 0;
-        
+
         while pos < src.len() {
-            if src[pos] == b'9' && pos + 1 < src.len() && src[pos + 1] == b'=' {
+            if src[pos] == b'9' && pos + 1 < src.len() && src[pos + 1] == b'='
+            {
                 // Found start of body length field
                 in_body_length = true;
                 pos += 2;
                 continue;
             }
-            
+
             if in_body_length {
                 if src[pos] == separator {
                     // End of body length field
                     body_length_end = pos + 1;
                     break;
                 } else if src[pos].is_ascii_digit() {
-                    body_length = body_length * 10 + (src[pos] - b'0') as u32;
+                    body_length = body_length
+                        .saturating_mul(10)
+                        .saturating_add((src[pos] - b'0') as u32);
                 }
             }
-            
+
             pos += 1;
         }
-        
+
         if body_length_end == 0 {
             return Ok(None); // Haven't found complete body length yet
         }
-        
+
         let expected_total_length = body_length_end + body_length as usize + 7; // +7 for checksum "10=XXX|"
-        
+
         if src.len() >= expected_total_length {
             Ok(Some(expected_total_length))
         } else {
@@ -135,17 +142,13 @@ impl GetConfig for TokioRawDecoder {
 #[derive(Debug)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "utils-tokio")))]
 pub struct TokioDecoder {
-    dict: Dictionary,
     decoder: Decoder,
 }
 
 impl TokioDecoder {
     /// Creates a new TokioDecoder with the specified dictionary.
     pub fn new(dict: Dictionary) -> Self {
-        Self {
-            decoder: Decoder::new(dict.clone()),
-            dict,
-        }
+        Self { decoder: Decoder::new(dict) }
     }
 }
 
@@ -153,22 +156,28 @@ impl codec::Decoder for TokioDecoder {
     type Item = Message<'static, Bytes>;
     type Error = DecodeError;
 
-    fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
+    fn decode(
+        &mut self,
+        src: &mut BytesMut,
+    ) -> Result<Option<Self::Item>, Self::Error> {
         // Use the same logic as TokioRawDecoder to find complete messages
         if let Some(message_len) = self.find_complete_message(src)? {
             // Split off the complete message
             let message_data = src.split_to(message_len);
             let frozen_data = message_data.freeze();
-            
+
             // Clone the frozen data for the owned message
             let frozen_data_clone = frozen_data.clone();
-            
+
             // Decode the message using the full decoder
             let result = self.decoder.decode(&frozen_data[..]);
             match result {
                 Ok(message) => {
                     // Convert to owned message with Bytes backing
-                    let owned_message = Self::message_to_owned_static(message, frozen_data_clone);
+                    let owned_message = Self::message_to_owned_static(
+                        message,
+                        frozen_data_clone,
+                    );
                     Ok(Some(owned_message))
                 }
                 Err(e) => Err(e),
@@ -181,25 +190,29 @@ impl codec::Decoder for TokioDecoder {
 
 impl TokioDecoder {
     /// Same logic as TokioRawDecoder for finding complete messages.
-    fn find_complete_message(&self, src: &BytesMut) -> Result<Option<usize>, DecodeError> {
+    fn find_complete_message(
+        &self,
+        src: &BytesMut,
+    ) -> Result<Option<usize>, DecodeError> {
         if src.len() < 10 {
             return Ok(None);
         }
 
         let separator = self.decoder.config().separator;
-        
+
         let mut pos = 0;
         let mut in_body_length = false;
         let mut body_length = 0u32;
         let mut body_length_end = 0;
-        
+
         while pos < src.len() {
-            if src[pos] == b'9' && pos + 1 < src.len() && src[pos + 1] == b'=' {
+            if src[pos] == b'9' && pos + 1 < src.len() && src[pos + 1] == b'='
+            {
                 in_body_length = true;
                 pos += 2;
                 continue;
             }
-            
+
             if in_body_length {
                 if src[pos] == separator {
                     body_length_end = pos + 1;
@@ -208,16 +221,16 @@ impl TokioDecoder {
                     body_length = body_length * 10 + (src[pos] - b'0') as u32;
                 }
             }
-            
+
             pos += 1;
         }
-        
+
         if body_length_end == 0 {
             return Ok(None);
         }
-        
+
         let expected_total_length = body_length_end + body_length as usize + 7;
-        
+
         if src.len() >= expected_total_length {
             Ok(Some(expected_total_length))
         } else {
@@ -226,12 +239,17 @@ impl TokioDecoder {
     }
 
     /// Converts a borrowed message to an owned message backed by Bytes.
-    fn message_to_owned_static(_message: Message<&[u8]>, _data: Bytes) -> Message<'static, Bytes> {
+    fn message_to_owned_static(
+        _message: Message<&[u8]>,
+        _data: Bytes,
+    ) -> Message<'static, Bytes> {
         // This is a placeholder implementation - in practice you'd need to
         // properly construct an owned Message backed by the Bytes data
         // TODO: Replace with proper owned Message construction
         // REMOVED UNSAFE: Cannot safely extend lifetimes without proper reconstruction
-        todo!("Implement proper message ownership conversion without unsafe transmute")
+        todo!(
+            "Implement proper message ownership conversion without unsafe transmute"
+        )
     }
 }
 
@@ -248,9 +266,7 @@ pub struct TokioEncoder {
 impl TokioEncoder {
     /// Creates a new TokioEncoder.
     pub fn new() -> Self {
-        Self {
-            encoder: Encoder::new(),
-        }
+        Self { encoder: Encoder::new() }
     }
 }
 
@@ -263,7 +279,11 @@ impl Default for TokioEncoder {
 impl codec::Encoder<&[u8]> for TokioEncoder {
     type Error = std::io::Error;
 
-    fn encode(&mut self, item: &[u8], dst: &mut BytesMut) -> Result<(), Self::Error> {
+    fn encode(
+        &mut self,
+        item: &[u8],
+        dst: &mut BytesMut,
+    ) -> Result<(), Self::Error> {
         dst.reserve(item.len());
         dst.put_slice(item);
         Ok(())
@@ -273,7 +293,11 @@ impl codec::Encoder<&[u8]> for TokioEncoder {
 impl codec::Encoder<Vec<u8>> for TokioEncoder {
     type Error = std::io::Error;
 
-    fn encode(&mut self, item: Vec<u8>, dst: &mut BytesMut) -> Result<(), Self::Error> {
+    fn encode(
+        &mut self,
+        item: Vec<u8>,
+        dst: &mut BytesMut,
+    ) -> Result<(), Self::Error> {
         dst.reserve(item.len());
         dst.put_slice(&item);
         Ok(())
@@ -283,7 +307,11 @@ impl codec::Encoder<Vec<u8>> for TokioEncoder {
 impl codec::Encoder<Bytes> for TokioEncoder {
     type Error = std::io::Error;
 
-    fn encode(&mut self, item: Bytes, dst: &mut BytesMut) -> Result<(), Self::Error> {
+    fn encode(
+        &mut self,
+        item: Bytes,
+        dst: &mut BytesMut,
+    ) -> Result<(), Self::Error> {
         dst.reserve(item.len());
         dst.put_slice(&item);
         Ok(())
@@ -305,14 +333,13 @@ impl GetConfig for TokioEncoder {
 #[cfg(test)]
 mod test {
     use super::*;
-    use tokio_util::codec::{FramedRead, FramedWrite};
-    use tokio::io;
+    use tokio_util::codec::{Decoder, Encoder};
 
     #[tokio::test]
     async fn tokio_raw_decoder_basic() {
         let mut decoder = TokioRawDecoder::new();
         let mut buf = BytesMut::from(&b"8=FIX.4.4|9=42|35=0|49=A|56=B|34=12|52=20100304-07:59:30|10=185|"[..]);
-        
+
         let result = decoder.decode(&mut buf);
         assert!(result.is_ok());
     }
@@ -321,8 +348,8 @@ mod test {
     async fn tokio_encoder_basic() {
         let mut encoder = TokioEncoder::new();
         let mut buf = BytesMut::new();
-        
-        let message = b"8=FIX.4.4|9=42|35=0|10=185|";
+
+        let message: &[u8] = b"8=FIX.4.4|9=42|35=0|10=185|";
         let result = encoder.encode(message, &mut buf);
         assert!(result.is_ok());
         assert_eq!(buf.as_ref(), message);

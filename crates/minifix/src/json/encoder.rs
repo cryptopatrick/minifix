@@ -15,10 +15,12 @@ impl Default for Encoder {
 }
 
 impl Encoder {
+    /// Constructs a fresh JSON encoder with an empty internal buffer.
     pub fn new() -> Self {
         Self { buffer: Vec::new(), has_message: false }
     }
 
+    /// Begins a new FIX message and returns the initial typestate builder.
     pub fn start_message(&mut self) -> encoder_states::Initial {
         self.buffer.clear();
         self.has_message = true;
@@ -34,10 +36,12 @@ pub mod encoder_states {
     #[derive(Debug)]
     #[must_use]
     pub struct Initial<'a> {
+        /// Mutable reference to the underlying encoder state machine.
         pub encoder: &'a mut Encoder,
     }
 
     impl<'a> Initial<'a> {
+        /// Starts populating the standard header section of the message.
         pub fn with_header(self) -> StdHeader<'a> {
             self.encoder.buffer.extend_from_slice(br#"{"StandardHeader":{"#);
             StdHeader { encoder: self.encoder }
@@ -75,11 +79,13 @@ pub mod encoder_states {
     }
 
     impl<'a> StdHeader<'a> {
+        /// Switches from populating the standard header to encoding the body.
         pub fn with_body(self) -> Body<'a> {
             self.encoder.buffer.extend_from_slice(br#"},"Body":{"#);
             Body { encoder: self.encoder }
         }
 
+        /// Adds a header field to the JSON message.
         pub fn set<T, F>(self, field: &F, value: T) -> Self
         where
             T: FieldType<'a>,
@@ -103,11 +109,13 @@ pub mod encoder_states {
     }
 
     impl<'a> Body<'a> {
+        /// Switches from the message body to encoding the standard trailer.
         pub fn with_trailer(self) -> StdTrailer<'a> {
             self.encoder.buffer.extend_from_slice(br#"},"StandardTrailer":{"#);
             StdTrailer { encoder: self.encoder }
         }
 
+        /// Adds a body field to the JSON message.
         pub fn set<T, F>(self, field: &F, value: T) -> Self
         where
             T: FieldType<'a>,
@@ -131,11 +139,13 @@ pub mod encoder_states {
     }
 
     impl<'a> StdTrailer<'a> {
+        /// Finalizes the JSON message and returns the encoded string slice.
         pub fn done(self) -> &'a str {
             self.encoder.buffer.extend_from_slice(b"}}");
             std::str::from_utf8(&self.encoder.buffer[..]).unwrap()
         }
 
+        /// Adds a trailer field to the JSON message.
         pub fn set<T, F>(self, field: &F, value: T) -> Self
         where
             T: FieldType<'a>,

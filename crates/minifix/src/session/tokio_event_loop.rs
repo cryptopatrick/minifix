@@ -3,7 +3,7 @@ use crate::tagvalue::{DecodeError, DecoderStreaming, Message};
 use std::io;
 use std::time::{Duration, Instant};
 use tokio::io::{AsyncRead, AsyncReadExt};
-use tokio::time::{sleep_until, Instant as TokioInstant};
+use tokio::time::{Instant as TokioInstant, sleep_until};
 
 /// Tokio-specific asynchronous low-level event loop for FIX connectors.
 ///
@@ -70,11 +70,14 @@ where
 
             let now = Instant::now();
             let tokio_now = TokioInstant::now();
-            
+
             // Calculate timeouts using Tokio's time primitives
-            let heartbeat_deadline = tokio_now + (self.heartbeat - (now - self.last_heartbeat));
-            let test_request_deadline = tokio_now + (self.heartbeat_soft_tolerance - (now - self.last_reset));
-            let logout_deadline = tokio_now + (self.heartbeat_hard_tolerance - (now - self.last_reset));
+            let heartbeat_deadline =
+                tokio_now + (self.heartbeat - (now - self.last_heartbeat));
+            let test_request_deadline = tokio_now
+                + (self.heartbeat_soft_tolerance - (now - self.last_reset));
+            let logout_deadline = tokio_now
+                + (self.heartbeat_hard_tolerance - (now - self.last_reset));
 
             tokio::select! {
                 read_result = self.input.read(buf) => {

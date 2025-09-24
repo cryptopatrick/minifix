@@ -15,7 +15,7 @@
 //! use tokio::net::TcpStream;
 //!
 //! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 //!     let config = TokioFixConfig::builder()
 //!         .heartbeat_interval(std::time::Duration::from_secs(30))
 //!         .sender_comp_id("CLIENT")
@@ -36,13 +36,20 @@ pub use self::client::*;
 pub use self::config::*;
 
 #[cfg(feature = "utils-tokio")]
-pub use crate::session::tokio_connection::{TokioAppChannels, TokioAppHandler, TokioFixConnection};
+pub use crate::session::tokio_connection::{
+    TokioAppChannels, TokioAppHandler, TokioFixConnection,
+};
 #[cfg(feature = "utils-tokio")]
 pub use crate::session::tokio_event_loop::{TokioLlEvent, TokioLlEventLoop};
 #[cfg(feature = "utils-tokio")]
-pub use crate::tagvalue::tokio_decoder::{TokioDecoder, TokioEncoder, TokioRawDecoder};
+pub use crate::tagvalue::tokio_decoder::{
+    TokioDecoder, TokioEncoder, TokioRawDecoder,
+};
 
+/// Tokio-based FIX client implementation.
 #[cfg(feature = "utils-tokio")]
 mod client;
+
+/// Configuration for Tokio-based FIX connections.
 #[cfg(feature = "utils-tokio")]
 mod config;

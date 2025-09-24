@@ -16,9 +16,12 @@ mod heartbeat_rule;
 mod resend_request_range;
 mod seq_numbers;
 
+/// Tokio-based FIX connection implementation.
 #[cfg(feature = "utils-tokio")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "utils-tokio")))]
 pub mod tokio_connection;
+
+/// Tokio-based FIX event loop implementation.
 #[cfg(feature = "utils-tokio")]
 #[cfg_attr(doc_cfg, doc(cfg(feature = "utils-tokio")))]
 pub mod tokio_event_loop;
@@ -105,7 +108,7 @@ pub trait Backend: Clone {
 }
 
 /// FIX session state tracking.
-/// 
+///
 /// Tracks sequence numbers and session information for FIX protocol sessions.
 #[derive(Debug, Clone)]
 pub struct State {

@@ -53,6 +53,7 @@ pub use decoder::{Decoder, DecoderStreaming, Fields, Message, MessageGroup};
 pub use encoder::{Encoder, EncoderHandle};
 pub use raw_decoder::{RawDecoder, RawDecoderStreaming, RawFrame};
 
+/// Tokio-based codec implementations for FIX message processing.
 #[cfg(feature = "utils-tokio")]
 pub mod tokio_decoder;
 #[cfg(feature = "utils-tokio")]

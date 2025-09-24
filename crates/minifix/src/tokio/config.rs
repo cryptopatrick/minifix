@@ -7,10 +7,15 @@ use std::time::Duration;
 /// FIX connections in Tokio applications with sensible defaults.
 #[derive(Debug, Clone)]
 pub struct TokioFixConfig {
+    /// The sender company ID for FIX messages.
     pub sender_comp_id: String,
+    /// The target company ID for FIX messages.
     pub target_comp_id: String,
+    /// The heartbeat interval for FIX sessions.
     pub heartbeat_interval: Duration,
+    /// The FIX session environment (Production/Test).
     pub environment: Environment,
+    /// The FIX protocol version string (e.g., "FIX.4.4").
     pub begin_string: String,
 }
 
@@ -64,9 +69,7 @@ pub struct TokioFixConfigBuilder {
 impl TokioFixConfigBuilder {
     /// Creates a new builder with default values.
     pub fn new() -> Self {
-        Self {
-            config: TokioFixConfig::default(),
-        }
+        Self { config: TokioFixConfig::default() }
     }
 
     /// Sets the sender component ID.

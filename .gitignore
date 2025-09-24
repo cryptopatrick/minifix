@@ -2,6 +2,7 @@
 target/
 _docs-vibe/
 _wb/
+.claude/
 
 # Files
 .claude

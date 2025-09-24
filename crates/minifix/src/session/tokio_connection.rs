@@ -9,27 +9,13 @@ enum Response<'a> {
     Application(Message<'a, &'a [u8]>),
     OutboundBytes(&'a [u8]),
 }
-use crate::FieldMap;
 use crate::tagvalue::Message;
 use crate::tagvalue::{DecoderStreaming, Encoder};
-use crate::{SetField, StreamingDecoder};
+use crate::{FieldMap, SetField, StreamingDecoder};
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::sync::mpsc;
-use uuid::Uuid;
-
-const BEGIN_SEQ_NO: u32 = 7;
-const BEGIN_STRING: u32 = 8;
-const END_SEQ_NO: u32 = 16;
-const MSG_SEQ_NUM: u32 = 34;
-const MSG_TYPE: u32 = 35;
-const SENDER_COMP_ID: u32 = 49;
-const SENDING_TIME: u32 = 52;
-const TARGET_COMP_ID: u32 = 56;
-const TEXT: u32 = 58;
-const ENCRYPT_METHOD: u32 = 98;
-const TEST_REQ_ID: u32 = 112;
 
 /// A Tokio-optimized FIX connection processor.
 ///
@@ -37,7 +23,6 @@ const TEST_REQ_ID: u32 = 112;
 /// native integration with Tokio's async I/O primitives, channels, and timers.
 #[derive(Debug)]
 pub struct TokioFixConnection<B, C = Config> {
-    uuid: Uuid,
     config: C,
     backend: B,
     encoder: Encoder,
@@ -58,27 +43,26 @@ impl TokioAppHandler {
     pub fn new() -> (Self, TokioAppChannels) {
         let (inbound_tx, inbound_rx) = mpsc::unbounded_channel();
         let (outbound_tx, outbound_rx) = mpsc::unbounded_channel();
-        
-        let handler = Self {
-            inbound_tx,
-            outbound_rx,
-        };
-        
-        let channels = TokioAppChannels {
-            inbound_rx,
-            outbound_tx,
-        };
-        
+
+        let handler = Self { inbound_tx, outbound_rx };
+
+        let channels = TokioAppChannels { inbound_rx, outbound_tx };
+
         (handler, channels)
     }
 
     /// Sends an inbound application message to the application handler.
-    pub fn send_inbound(&self, message: Message<'static, Vec<u8>>) -> Result<(), mpsc::error::SendError<Message<'static, Vec<u8>>>> {
+    pub fn send_inbound(
+        &self,
+        message: Message<'static, Vec<u8>>,
+    ) -> Result<(), mpsc::error::SendError<Message<'static, Vec<u8>>>> {
         self.inbound_tx.send(message)
     }
 
     /// Tries to receive an outbound message from the application.
-    pub fn try_recv_outbound(&mut self) -> Result<Vec<u8>, mpsc::error::TryRecvError> {
+    pub fn try_recv_outbound(
+        &mut self,
+    ) -> Result<Vec<u8>, mpsc::error::TryRecvError> {
         self.outbound_rx.try_recv()
     }
 }
@@ -86,7 +70,9 @@ impl TokioAppHandler {
 /// Application-side channels for handling FIX messages.
 #[derive(Debug)]
 pub struct TokioAppChannels {
+    /// Receiver channel for inbound FIX messages from the connection.
     pub inbound_rx: mpsc::UnboundedReceiver<Message<'static, Vec<u8>>>,
+    /// Sender channel for outbound FIX messages to the connection.
     pub outbound_tx: mpsc::UnboundedSender<Vec<u8>>,
 }
 
@@ -98,7 +84,6 @@ where
     /// Creates a new Tokio FIX connection.
     pub fn new(config: C, backend: B) -> Self {
         Self {
-            uuid: Uuid::new_v4(),
             config,
             backend,
             encoder: Encoder::new(),
@@ -110,16 +95,17 @@ where
 
     /// Starts the FIX connection using a Tokio TcpStream.
     pub async fn start_with_stream(
-        &mut self, 
+        &mut self,
         stream: TcpStream,
         mut decoder: DecoderStreaming<Vec<u8>>,
         app_handler: Option<TokioAppHandler>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let (mut reader, mut writer) = stream.into_split();
-        
+
         // Establish the FIX connection
-        self.establish_connection(&mut reader, &mut writer, &mut decoder).await?;
-        
+        self.establish_connection(&mut reader, &mut writer, &mut decoder)
+            .await?;
+
         // Run the main event loop
         self.tokio_event_loop(reader, writer, decoder, app_handler).await
     }
@@ -139,7 +125,7 @@ where
         loop {
             let buffer = decoder.fillable();
             reader.read_exact(buffer).await?;
-            
+
             if let Ok(Some(())) = decoder.try_parse() {
                 let logon_response = decoder.message();
                 self.on_logon(logon_response);
@@ -150,7 +136,7 @@ where
                 break;
             }
         }
-        
+
         Ok(())
     }
 
@@ -161,8 +147,9 @@ where
         decoder: DecoderStreaming<Vec<u8>>,
         mut app_handler: Option<TokioAppHandler>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let mut event_loop = TokioLlEventLoop::new(decoder, reader, self.heartbeat());
-        
+        let mut event_loop =
+            TokioLlEventLoop::new(decoder, reader, self.heartbeat());
+
         loop {
             tokio::select! {
                 // Handle FIX protocol events
@@ -215,7 +202,7 @@ where
                         }
                     }
                 }
-                
+
                 // Handle outbound application messages
                 outbound = async {
                     if let Some(ref mut handler) = app_handler {
@@ -239,9 +226,10 @@ where
         let target_comp_id = self.config.target_comp_id();
         let heartbeat = self.config.heartbeat().as_secs();
         let msg_seq_num = self.msg_seq_num_outbound.next();
-        
+
         self.buffer.clear();
-        let mut msg = self.encoder.start_message(begin_string, &mut self.buffer, b"A");
+        let mut msg =
+            self.encoder.start_message(begin_string, &mut self.buffer, b"A");
         msg.set(49, sender_comp_id);
         msg.set(56, target_comp_id);
         let now = chrono::Utc::now().format("%Y%m%d-%H:%M:%S%.3f").to_string();
@@ -249,30 +237,15 @@ where
         msg.set(34, msg_seq_num);
         msg.set(98, 0);
         msg.set(108, heartbeat as u32);
-        
+
         let (_, _) = msg.done();
         self.buffer.clone()
     }
 
-    fn on_heartbeat_is_due(&mut self) -> &[u8] {
-        let begin_string = self.config.begin_string();
-        let msg_seq_num = self.msg_seq_num_outbound.next();
-        let sender_comp_id = self.config.sender_comp_id();
-        let target_comp_id = self.config.target_comp_id();
-        
-        self.buffer.clear();
-        let mut msg = self.encoder.start_message(begin_string, &mut self.buffer, b"0");
-        msg.set(49, sender_comp_id);
-        msg.set(56, target_comp_id);
-        msg.set(34, msg_seq_num);
-        let now = chrono::Utc::now().format("%Y%m%d-%H:%M:%S%.3f").to_string();
-        msg.set(52, now.as_str());
-        
-        let (_, _) = msg.done();
-        &self.buffer
-    }
-
-    fn on_inbound_message<'a>(&'a mut self, msg: Message<'a, &'a [u8]>) -> Response<'a> {
+    fn on_inbound_message<'a>(
+        &'a mut self,
+        msg: Message<'a, &'a [u8]>,
+    ) -> Response<'a> {
         // Extract message type and dispatch
         if let Ok(msg_type) = msg.get::<&[u8]>(35) {
             match msg_type {
@@ -288,12 +261,8 @@ where
                     let response = self.on_test_request(msg);
                     Response::OutboundBytes(response)
                 }
-                b"5" => {
-                    Response::TerminateTransport
-                }
-                _ => {
-                    Response::Application(msg)
-                }
+                b"5" => Response::TerminateTransport,
+                _ => Response::Application(msg),
             }
         } else {
             Response::Application(msg)
@@ -314,33 +283,26 @@ where
         let msg_seq_num = self.msg_seq_num_outbound.next();
         let sender_comp_id = self.config.sender_comp_id();
         let target_comp_id = self.config.target_comp_id();
-        
+
         self.buffer.clear();
-        let mut response = self.encoder.start_message(begin_string, &mut self.buffer, b"0");
+        let mut response =
+            self.encoder.start_message(begin_string, &mut self.buffer, b"0");
         response.set(49, sender_comp_id);
         response.set(56, target_comp_id);
         response.set(34, msg_seq_num);
         let now = chrono::Utc::now().format("%Y%m%d-%H:%M:%S%.3f").to_string();
         response.set(52, now.as_str());
         response.set(112, test_req_id);
-        
+
         let (_, _) = response.done();
         &self.buffer
     }
 
-    fn on_outbound_message(&mut self, _message: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
+    fn on_outbound_message(
+        &mut self,
+        _message: &[u8],
+    ) -> Result<(), Box<dyn std::error::Error>> {
         Ok(())
-    }
-
-    fn set_sender_and_target(&self, msg: &mut impl crate::SetField<u32>) {
-        msg.set(49, self.config.sender_comp_id());
-        msg.set(56, self.config.target_comp_id());
-    }
-
-    fn set_sending_time(&self, msg: &mut impl crate::SetField<u32>) {
-        // Use a timestamp format compatible with FIX
-        let now = chrono::Utc::now().format("%Y%m%d-%H:%M:%S%.3f").to_string();
-        msg.set(52, now.as_str());
     }
 
     fn heartbeat(&self) -> Duration {
@@ -352,27 +314,20 @@ where
         let msg_seq_num = self.msg_seq_num_outbound.next();
         let sender_comp_id = self.config.sender_comp_id();
         let target_comp_id = self.config.target_comp_id();
-        
+
         self.buffer.clear();
-        let mut msg = self.encoder.start_message(begin_string, &mut self.buffer, b"0");
+        let mut msg =
+            self.encoder.start_message(begin_string, &mut self.buffer, b"0");
         msg.set(49, sender_comp_id);
         msg.set(56, target_comp_id);
         msg.set(34, msg_seq_num);
         let now = chrono::Utc::now().format("%Y%m%d-%H:%M:%S%.3f").to_string();
         msg.set(52, now.as_str());
-        
+
         let (_, _) = msg.done();
         self.buffer.clone()
     }
 
-    fn message_to_owned(&self, msg: Message<&[u8]>) -> Message<'static, Vec<u8>> {
-        // Convert message to owned data by copying the bytes
-        let _owned_data = msg.as_bytes().to_vec();
-        // Note: This is still a simplified implementation. A proper solution would
-        // need to reconstruct the message with the owned data and proper lifetime management.
-        // For now, we'll avoid the unsafe transmute and create a new message structure.
-        todo!("Implement proper message ownership conversion without unsafe transmute")
-    }
 }
 
 /// Message sequence number counter for FIX sessions.
@@ -380,16 +335,19 @@ where
 pub struct MsgSeqNumCounter(u64);
 
 impl MsgSeqNumCounter {
+    /// Creates a new sequence number counter starting at 1.
     pub const fn new() -> Self {
         Self(1)
     }
 
+    /// Returns the current sequence number and increments the counter.
     pub fn next(&mut self) -> u64 {
         let current = self.0;
         self.0 += 1;
         current
     }
 
+    /// Returns the expected next sequence number without incrementing.
     pub fn expected(&self) -> u64 {
         self.0
     }
@@ -404,13 +362,11 @@ impl Default for MsgSeqNumCounter {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::tagvalue::Decoder;
-    use tokio::net::TcpListener;
 
     #[tokio::test]
     async fn tokio_app_handler_channels() {
-        let (handler, mut channels) = TokioAppHandler::new();
-        
+        let (_handler, channels) = TokioAppHandler::new();
+
         // Test sending a message through the handler would work
         // (This is a basic test to ensure the channel setup works)
         assert!(channels.outbound_tx.send(vec![1, 2, 3]).is_ok());

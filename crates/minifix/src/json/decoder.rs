@@ -5,7 +5,6 @@ use minifix_dictionary::Dictionary;
 use serde::{Deserialize, Serialize};
 use std::borrow::{Borrow, Cow};
 use std::collections::HashMap;
-use std::sync::Arc;
 
 /// A read-only JSON FIX message as parsed by [`Decoder`].
 #[derive(Debug, Copy, Clone)]
@@ -99,6 +98,7 @@ impl<'a> RepeatingGroup for MessageGroup<'a> {
     }
 }
 
+/// Iterator over the fields contained in a parsed JSON FIX message.
 #[derive(Debug)]
 pub struct MessageFieldsIter<'a> {
     fields:
@@ -116,7 +116,6 @@ impl<'a> Iterator for MessageFieldsIter<'a> {
 /// A codec for the JSON encoding type.
 #[derive(Debug, Clone)]
 pub struct Decoder {
-    dictionaries: HashMap<String, Arc<Dictionary>>,
     message_builder: MessageInternal<'static>,
     config: Config,
 }
@@ -124,16 +123,14 @@ pub struct Decoder {
 impl Decoder {
     /// Creates a new JSON [`Decoder`]. `dict` serves as a reference for data type inference
     /// of incoming messages' fields. Configuration options are initialized via [`Default`].
-    pub fn new(dict: Dictionary) -> Self {
-        let mut dictionaries = HashMap::new();
-        dictionaries.insert(dict.version().to_string(), Arc::new(dict));
+    pub fn new(_dict: Dictionary) -> Self {
         Self {
-            dictionaries,
             message_builder: MessageInternal::default(),
             config: Config::default(),
         }
     }
 
+    /// Deserializes a JSON-encoded FIX payload into a structured [`Message`].
     pub fn decode<'a>(
         &'a mut self,
         data: &'a [u8],
@@ -180,11 +177,14 @@ impl GetConfig for Decoder {
 
 type Fields<'a> = HashMap<Cow<'a, str>, FieldOrGroup<'a>>;
 
+/// JSON representation of either a standalone FIX field or a repeating group.
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum FieldOrGroup<'a> {
+    /// A single FIX field encoded as a string value.
     Field(Cow<'a, str>),
     #[serde(borrow)]
+    /// A repeating group represented as a vector of nested field maps.
     Group(Vec<Fields<'a>>),
 }
 
