@@ -1,4 +1,4 @@
-//! First-class Tokio integration for MiniFix.
+//! First-class Tokio integration for miniFIX .
 //!
 //! This module provides Tokio-specific helpers and utilities that allow users
 //! to easily integrate FIX sessions with popular async tooling in the Tokio

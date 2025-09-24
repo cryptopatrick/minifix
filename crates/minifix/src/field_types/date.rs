@@ -104,9 +104,13 @@ impl Date {
     /// dates.
     #[cfg(feature = "utils-chrono")]
     #[cfg_attr(doc_cfg, doc(cfg(feature = "utils-chrono")))]
-    pub fn to_chrono_utc(&self) -> Option<chrono::Date<chrono::Utc>> {
+    pub fn to_chrono_utc(&self) -> Option<chrono::DateTime<chrono::Utc>> {
         let naive = self.to_chrono_naive()?;
-        Some(chrono::Date::from_utc(naive, chrono::Utc))
+        // Convert NaiveDate to NaiveDateTime at start of day, then to UTC DateTime
+        Some(chrono::DateTime::from_naive_utc_and_offset(
+            naive.and_hms_opt(0, 0, 0)?,
+            chrono::Utc
+        ))
     }
 
     /// Converts `self` to [`chrono::NaiveDate`]. [`chrono`] might impose

@@ -2,7 +2,7 @@ Product Requirements
 
   - Objective
     Deliver production-grade Simple Binary Encoding support
-  for FIX 4.4 and FIX 4.2 so MiniFix users can encode/decode
+  for FIX 4.4 and FIX 4.2 so miniFIX  users can encode/decode
   those dictionaries with SBE, alongside existing tag-value
   tooling.
   - Scope
@@ -44,7 +44,7 @@ Product Requirements
       - Follow FIX SBE spec precisely, including endianness,
   header layout, presence maps, and repeating-group
   semantics.
-      - Maintain compatibility with existing MiniFix traits
+      - Maintain compatibility with existing miniFIX  traits
   (e.g. reuse Buffer, SetField where practical).
   - Risks & Mitigations
       - Schema drift: changes in official templates could

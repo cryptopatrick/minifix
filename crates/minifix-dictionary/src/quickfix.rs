@@ -11,6 +11,7 @@ pub struct QuickFixReader<'a> {
 }
 
 impl<'a> QuickFixReader<'a> {
+    #[allow(clippy::new_ret_no_self)] // Returns parsed Dictionary, not Self
     pub fn new(
         xml_document: &'a roxmltree::Document<'a>,
     ) -> ParseResult<Dictionary> {
@@ -55,8 +56,7 @@ impl<'a> QuickFixReader<'a> {
         let find_tagged_child = |tag: &str| {
             root.children().find(|n| n.has_tag_name(tag)).ok_or_else(|| {
                 ParseDictionaryError::InvalidData(format!(
-                    "<{}> tag not found",
-                    tag
+                    "<{tag}> tag not found"
                 ))
             })
         };
@@ -83,7 +83,7 @@ impl<'a> QuickFixReader<'a> {
             version_minor,
             // Omit Service Pack ID if set to zero.
             if version_sp != "0" {
-                format!("-SP{}", version_sp)
+                format!("-SP{version_sp}")
             } else {
                 String::new()
             }
@@ -270,8 +270,7 @@ fn import_layout_item(
                 .field_by_name(name)
                 .unwrap_or_else(||
                     panic!(
-                        "failed to find a field named \"{}\" in the XML file, check exact spelling and casing",
-                        name
+                        "failed to find a field named \"{name}\" in the XML file, check exact spelling and casing"
                     )
                 )
                 .tag()
@@ -289,8 +288,7 @@ fn import_layout_item(
                 .field_by_name(name)
                 .unwrap_or_else(||
                     panic!(
-                        "failed to find a group named \"{}\" in the XML file, check exact spelling and casing",
-                        name
+                        "failed to find a group named \"{name}\" in the XML file, check exact spelling and casing"
                     )
                 )
                 .tag()

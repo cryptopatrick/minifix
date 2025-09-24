@@ -164,6 +164,7 @@ impl<C> GetConfig for RawDecoder<C> {
 enum ParserState {
     Empty,
     Header(HeaderInfo, usize),
+    #[allow(dead_code)] // TODO: Implement parser failure state handling
     Failed,
 }
 

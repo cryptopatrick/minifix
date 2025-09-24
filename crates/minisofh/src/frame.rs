@@ -11,7 +11,7 @@ const MAX_MESSAGE_SIZE_IN_BYTES: usize =
 ///
 /// [`Frame`] is generic over `T`, which must implement `AsRef<[u8]>` and is the
 /// *payload type*. Common choices for `T` are `&'a [u8]` for some lifetime `'a`,
-/// [`bytes::Bytes`], and [`bytes::BytesMut`].
+/// `bytes::Bytes`, and `bytes::BytesMut`.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Frame<T> {
     encoding_type: u16,

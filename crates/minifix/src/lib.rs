@@ -1,14 +1,14 @@
 //! A Financial Information eXchange
 //! ([FIX](https://www.fixtrading.org/standards/)) protocol implementation in Rust.
 //!
-//! MiniFixRust is a collection of reusable components to produce and consume
+//! miniFIX is a collection of reusable components to produce and consume
 //! FIX-compliant data. It is *not* a FIX engine, although you can very easily
-//! build one with MiniFixRust. MiniFixRust is intended to be:
+//! build one with miniFIX. miniFIX is intended to be:
 //!
 //!  - **Comprehensive**. Most standards adopted by the FIX Community are
 //!  either available or planned, from session layers to encodings and
 //!  dictionary-related logic.
-//!  - **Foundational**. MiniFixRust is foundational in the sense that it exposes a
+//!  - **Foundational**. miniFIX is foundational in the sense that it exposes a
 //!  large amount of primitives in its public interface, so that users can
 //!  easily build upon them to implement custom solutions tailored for their
 //!  needs. You'll often find that there are many ways of doing the same thing.
@@ -22,7 +22,7 @@
 //!
 //! # Cargo features
 //!
-//! MiniFixRust puts a lot of functionality behind optional features in order to
+//! miniFIX puts a lot of functionality behind optional features in order to
 //! optimize compilation times. The following features are available:
 //!
 //! ### `fix40`, `fix41`, `fix42`, `fix43`, `fix44`, `fixt11`
@@ -104,6 +104,7 @@
 
 mod buffer;
 mod field_access;
+/// Utility functions and helpers for FIX protocol operations.
 pub mod utils;
 
 pub mod definitions;

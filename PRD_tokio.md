@@ -1,7 +1,7 @@
 Product Requirements
 
   - Objective
-    Deliver first-class Tokio integrations so MiniFix users
+    Deliver first-class Tokio integrations so miniFIX  users
   can wire FIX sessions with popular async tooling (tokio,
   tokio-util) instead of juggling generic futures utilities.
   - Scope

@@ -44,7 +44,7 @@ impl TokioFixClient {
         let mut connection = TokioFixConnection::new(self.config.clone(), self.backend.clone());
         
         // Start the connection in a background task
-        let connection_handle = tokio::spawn(async move {
+        let _connection_handle = tokio::spawn(async move {
             connection.start_with_stream(stream, decoder, Some(app_handler)).await
         });
 
@@ -175,6 +175,8 @@ impl Backend for SimpleBackend {
 #[derive(Debug)]
 pub struct SimpleBackendError;
 
+// SAFETY: SimpleBackendError is a zero-sized type with no internal data,
+// making it safe to send across threads and share between threads.
 unsafe impl Send for SimpleBackendError {}
 unsafe impl Sync for SimpleBackendError {}
 

@@ -230,7 +230,8 @@ impl TokioDecoder {
         // This is a placeholder implementation - in practice you'd need to
         // properly construct an owned Message backed by the Bytes data
         // TODO: Replace with proper owned Message construction
-        unsafe { std::mem::transmute(_message) }
+        // REMOVED UNSAFE: Cannot safely extend lifetimes without proper reconstruction
+        todo!("Implement proper message ownership conversion without unsafe transmute")
     }
 }
 

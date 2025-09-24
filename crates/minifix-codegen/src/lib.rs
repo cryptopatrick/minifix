@@ -13,12 +13,12 @@ const MINIFIX_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// leading whitespace.
 ///
 /// ```text
-/// //! Generated automatically by MiniFixRust. Do not modify manually.
+/// //! Generated automatically by miniFIX. Do not modify manually.
 /// ```
 pub fn generated_code_notice() -> String {
     formatdoc!(
         r#"
-            // Generated automatically by MiniFixRust {} on {}.
+            // Generated automatically by miniFIX {} on {}.
             //
             // DO NOT MODIFY MANUALLY.
             // DO NOT COMMIT TO VERSION CONTROL.
@@ -70,7 +70,7 @@ fn codegen_field_type_enum_variant(
         .unwrap_or('_')
         .is_ascii_alphabetic();
     if identifier_needs_prefix {
-        identifier = format!("_{}", identifier);
+        identifier = format!("_{identifier}");
     }
     let value_literal = allowed_value.value();
     indent_string(
@@ -234,7 +234,7 @@ pub fn gen_definitions(
 
 fn indent_string(s: &str, prefix: &str) -> String {
     s.lines()
-        .map(|line| format!("{}{}", prefix, line))
+        .map(|line| format!("{prefix}{line}"))
         .collect::<Vec<String>>()
         .join("\n")
 }
@@ -287,11 +287,10 @@ fn gen_field_definition_with_hashsets(
     let doc_link = onixs_link_to_field(fix_dictionary.version(), field);
     let doc = if let Some(doc_link) = doc_link {
         format!(
-            "/// Field attributes for [`{} <{}>`]({}).",
-            name, tag, doc_link
+            "/// Field attributes for [`{name} <{tag}>`]({doc_link})."
         )
     } else {
-        format!("/// Field attributes for `{} <{}>`.", name, tag)
+        format!("/// Field attributes for `{name} <{tag}>`.")
     };
 
     formatdoc!(

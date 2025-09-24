@@ -39,7 +39,7 @@ impl FinalOptimizedCodegen {
 
     fn generated_code_notice(&self) -> String {
         format!(
-            "// Generated automatically by MiniFixRust {} on {}.\n// ULTRA-COMPACT VERSION - Reduced from 13,900 to <3,000 lines.\n//",
+            "// Generated automatically by miniFIX {} on {}.\n// ULTRA-COMPACT VERSION - Reduced from 13,900 to <3,000 lines.\n//",
             MINIFIX_VERSION,
             chrono::Utc::now().to_rfc2822(),
         )

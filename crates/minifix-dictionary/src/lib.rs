@@ -94,6 +94,7 @@ pub struct Dictionary {
 
     //layout_items: Vec<LayoutItemData>,
     categories_by_name: FnvHashMap<SmartString, CategoryData>,
+    #[allow(dead_code)] // TODO: Implement header field usage
     header: Vec<FieldData>,
 }
 

@@ -24,22 +24,27 @@ pub trait Configure: Clone + Default {
         Duration::from_secs(3)
     }
 
+    /// Returns the FIX protocol version string.
     fn begin_string(&self) -> &[u8] {
         b"FIX.4.4"
     }
 
+    /// Returns the sender company identifier.
     fn sender_comp_id(&self) -> &[u8] {
         b"SENDER_COMP"
     }
 
+    /// Returns the target company identifier.
     fn target_comp_id(&self) -> &[u8] {
         b"TARGET_COMP"
     }
 
+    /// Returns the session environment configuration.
     fn environment(&self) -> Environment {
         Environment::Production { allow_test: true }
     }
 
+    /// Returns the heartbeat interval duration.
     fn heartbeat(&self) -> Duration {
         Duration::from_secs(30)
     }

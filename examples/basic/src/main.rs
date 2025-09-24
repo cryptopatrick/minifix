@@ -1,4 +1,4 @@
-/// MiniFixRust Basic Example
+/// miniFIX Basic Example
 ///
 /// This example demonstrates the core functionality of the minifix crate:
 /// 1. Decoding FIX messages
@@ -14,7 +14,7 @@ const MARKET_DATA_MESSAGE: &[u8] =
     b"8=FIX.4.2|9=196|35=X|49=A|56=B|34=12|52=20100318-03:21:11.364|262=A|268=2|279=0|269=0|278=BID|55=EUR/USD|270=1.37215|15=EUR|271=2500000|346=1|279=0|269=1|278=OFFER|55=EUR/USD|270=1.37224|15=EUR|271=2503200|346=1|10=171|";
 
 fn main() {
-    println!("=== MiniFixRust Basic Example ===\n");
+    println!("=== miniFIX Basic Example ===\n");
 
     // Part 1: Decode a FIX message
     decode_example();

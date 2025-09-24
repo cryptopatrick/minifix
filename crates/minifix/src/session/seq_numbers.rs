@@ -4,7 +4,9 @@ use std::num::NonZeroU64;
 /// A tracker for seq. numbers inside a FIX session.
 #[derive(Debug, Copy, Clone)]
 pub struct SeqNumbers {
+    /// Next expected inbound message sequence number.
     pub next_inbound: u64,
+    /// Next outbound message sequence number.
     pub next_outbound: u64,
 }
 
@@ -24,14 +26,17 @@ impl SeqNumbers {
         self.next_outbound
     }
 
+    /// Increments the inbound sequence number counter.
     pub fn incr_inbound(&mut self) {
         self.next_inbound += 1;
     }
 
+    /// Increments the outbound sequence number counter.
     pub fn incr_outbound(&mut self) {
         self.next_outbound += 1;
     }
 
+    /// Validates an inbound sequence number against expected value.
     pub fn validate_inbound(
         &self,
         inbound: u64,
@@ -53,8 +58,12 @@ impl Default for SeqNumbers {
 }
 
 #[derive(Debug, Clone)]
+/// Errors that can occur during sequence number validation.
 pub enum SeqNumberError {
+    /// Sequence number gap detected, resend request needed.
     Recover,
+    /// Sequence number is lower than expected (duplicate).
     TooLow,
+    /// Message is missing the sequence number field.
     NoSeqNum,
 }

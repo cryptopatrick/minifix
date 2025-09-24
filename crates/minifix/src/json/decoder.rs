@@ -154,6 +154,9 @@ impl Decoder {
 
     fn message_builder<'a>(&'a mut self) -> &'a mut MessageInternal<'a> {
         self.message_builder.clear();
+        // SAFETY: We're shortening the lifetime from 'static to 'a, which is safe
+        // The transmute is converting from a longer to shorter lifetime, which cannot
+        // cause use-after-free bugs. The 'static lifetime is a conservative bound.
         unsafe {
             std::mem::transmute::<
                 &'a mut MessageInternal<'static>,

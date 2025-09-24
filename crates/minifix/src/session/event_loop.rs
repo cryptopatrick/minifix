@@ -58,6 +58,7 @@ where
         self.heartbeat_hard_tolerance = hard_tolerance;
     }
 
+    /// Gets the next event from the session event loop.
     pub async fn next_event<'a>(&'a mut self) -> Option<LlEvent<'a>> {
         let mut buf_filled_len = 0;
         let mut buf = self.decoder.fillable();

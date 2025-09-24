@@ -5,6 +5,7 @@
 //! The above is a conceptual view of the FIX Session layer, complete with its
 //! state machine and transitions between initiator and acceptor.
 
+/// Session backend implementations and application interfaces.
 pub mod backends;
 mod config;
 //mod connection; FIXME
@@ -39,22 +40,28 @@ pub trait Backend: Clone {
     /// The type of errors that can arise during a [`FixConnection`].
     type Error: for<'a> FieldType<'a>;
 
+    /// Returns the sender company ID for this session.
     fn sender_comp_id(&self) -> &[u8];
+    /// Returns the target company ID for this session.
     fn target_comp_id(&self) -> &[u8];
 
+    /// Returns the message encoding type, if specified.
     fn message_encoding(&self) -> Option<&[u8]> {
         None
     }
 
+    /// Sets the sender and target company IDs on a message.
     fn set_sender_and_target(&self, msg: &mut impl SetField<u32>) {
         msg.set(49, self.sender_comp_id());
         msg.set(56, self.target_comp_id());
     }
 
+    /// Returns the FIX session environment (Production/Test).
     fn environment(&self) -> Environment {
         Environment::Production { allow_test: false }
     }
 
+    /// Called when a heartbeat message should be sent.
     fn on_heartbeat_is_due(&mut self) -> Result<(), Self::Error> {
         Ok(())
     }
@@ -90,28 +97,41 @@ pub trait Backend: Clone {
     /// is established with the counterparty.
     fn on_successful_handshake(&mut self) -> Result<(), Self::Error>;
 
+    /// Fetches pending messages from the transport layer.
     fn fetch_messages(&mut self) -> Result<&[&[u8]], Self::Error>;
 
+    /// Returns the next pending message, if any.
     fn pending_message(&mut self) -> Option<&[u8]>;
 }
 
+/// FIX session state tracking.
+/// 
+/// Tracks sequence numbers and session information for FIX protocol sessions.
 #[derive(Debug, Clone)]
 pub struct State {
+    #[allow(dead_code)] // TODO: Implement sequence number tracking
     next_inbound: u64,
+    #[allow(dead_code)] // TODO: Implement sequence number tracking
     next_outbound: u64,
 }
 
+/// Message sequence number counter for FIX sessions.
+///
+/// Handles incrementing and tracking of FIX message sequence numbers.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MsgSeqNumCounter(u64);
 
 impl MsgSeqNumCounter {
+    /// Starting sequence number (0).
     pub const START: Self = Self(0);
 
+    /// Get the next sequence number and increment the counter.
     pub fn next(&mut self) -> u64 {
         self.0 += 1;
         self.0
     }
 
+    /// Get the expected next sequence number without incrementing.
     pub fn expected(&self) -> u64 {
         self.0 + 1
     }
@@ -127,4 +147,7 @@ impl Iterator for MsgSeqNumCounter {
 
 // FIXME
 #[derive(Debug)]
+/// FIX protocol connection handler.
+///
+/// Manages the connection state and message flow for FIX sessions.
 pub struct FixConnection;

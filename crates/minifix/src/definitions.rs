@@ -2,7 +2,7 @@
 //!
 //! # What is this and why is this necessary?
 //!
-//! MiniFixRust internals rely on [`Dictionary`](crate::Dictionary) for accessing
+//! miniFIX internals rely on [`Dictionary`](crate::Dictionary) for accessing
 //! details about fields, messages and other abstract entities defined in the
 //! FIX Dictionary specifications. Although this approach works quite well, it
 //! can become daunting to query a [`Dictionary`](crate::Dictionary) for even

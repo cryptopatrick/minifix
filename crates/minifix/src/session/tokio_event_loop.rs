@@ -3,7 +3,7 @@ use crate::tagvalue::{DecodeError, DecoderStreaming, Message};
 use std::io;
 use std::time::{Duration, Instant};
 use tokio::io::{AsyncRead, AsyncReadExt};
-use tokio::time::{sleep, sleep_until, Instant as TokioInstant};
+use tokio::time::{sleep_until, Instant as TokioInstant};
 
 /// Tokio-specific asynchronous low-level event loop for FIX connectors.
 ///

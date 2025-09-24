@@ -1,4 +1,4 @@
-//! Derive macros for MiniFixRust.
+//! Derive macros for miniFIX.
 
 #![deny(missing_debug_implementations, clippy::useless_conversion)]
 

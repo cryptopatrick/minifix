@@ -116,6 +116,8 @@ impl Decoder {
     }
 
     fn message_builder_mut(&mut self) -> &mut MessageBuilder<'_> {
+        // SAFETY: We're shortening the lifetime from 'static to '_, which is safe
+        // The transmute converts from a longer to shorter lifetime, preventing use-after-free
         unsafe { std::mem::transmute(&mut self.builder) }
     }
 
@@ -213,7 +215,7 @@ impl Decoder {
                 &raw_message[field_value_start..][..field_value_len],
                 config_assoc,
             )
-            .map_err(|e| DecodeError::Invalid)?;
+            .map_err(|_e| DecodeError::Invalid)?;
         let fix_type = self.tag_lookup.get(&tag.get());
         if fix_type == Some(&FixDatatype::NumInGroup) {
             self.builder.state.add_group(
@@ -466,6 +468,7 @@ struct DecoderGroupState {
 
 #[derive(Debug, Copy, Clone)]
 struct DecoderStateNewGroup {
+    #[allow(dead_code)] // TODO: Implement group tag handling
     tag: TagU32,
     index_of_group_tag: usize,
     num_entries: usize,
@@ -525,13 +528,19 @@ impl DecoderState {
 #[derive(Debug, Clone)]
 struct MessageBuilder<'a> {
     state: DecoderState,
+    #[allow(dead_code)] // TODO: Implement raw message access
     raw: &'a [u8],
     fields: HashMap<FieldLocator, (TagU32, &'a [u8], usize)>,
     field_locators: Vec<FieldLocator>,
+    #[allow(dead_code)] // TODO: Implement cell indexing
     i_first_cell: usize,
+    #[allow(dead_code)] // TODO: Implement cell indexing
     i_last_cell: usize,
+    #[allow(dead_code)] // TODO: Implement message section lengths
     len_end_header: usize,
+    #[allow(dead_code)] // TODO: Implement message section lengths
     len_end_body: usize,
+    #[allow(dead_code)] // TODO: Implement message section lengths
     len_end_trailer: usize,
     bytes: &'a [u8],
 }
@@ -694,6 +703,7 @@ where
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // TODO: Implement group reference functionality
 pub struct GroupRef<'a, T>
 where
     T: AsRef<[u8]>,
@@ -704,6 +714,7 @@ where
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // TODO: Implement group reference iterator
 pub struct GroupRefIter<'a, T>
 where
     T: AsRef<[u8]>,

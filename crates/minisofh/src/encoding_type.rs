@@ -123,8 +123,8 @@ impl EncodingType {
     /// assert_eq!(EncodingType::TagValue.to_bytes(), [0xF0, 0x00]);
     /// assert_eq!(EncodingType::Fast(0x42).to_bytes(), [0xFA, 0x42]);
     /// ```
-    pub const fn to_bytes(&self) -> [u8; 2] {
-        to_u16(*self).to_be_bytes()
+    pub const fn to_bytes(self) -> [u8; 2] {
+        to_u16(self).to_be_bytes()
     }
 }
 

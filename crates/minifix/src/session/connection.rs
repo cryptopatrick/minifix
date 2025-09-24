@@ -490,8 +490,9 @@ where
 
     fn on_high_seqnum(&mut self, msg: Message<&[u8]>) -> Response {
         let msg_seq_num = msg.get(&MSG_SEQ_NUM).unwrap();
-        self.make_resend_request(self.seq_numbers().next_inbound(), msg_seq_num);
-        todo!()
+        let resend_response = self.make_resend_request(self.seq_numbers().next_inbound(), msg_seq_num);
+        // Return the resend request response
+        resend_response
     }
 
     fn on_logon(&mut self, _logon: Message<&[u8]>) {

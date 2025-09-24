@@ -7,14 +7,14 @@
 //!
 //! 1. The total length of the current message, in bytes.
 //! 2. The "encoding type" of such message, i.e. a numeric code used to pass
-//! information to the receiver(s) as to the kind of payload. [`EncodingType`]
-//! comes in handy when dealing with standard encoding types.
+//!    information to the receiver(s) as to the kind of payload. [`EncodingType`]
+//!    comes in handy when dealing with standard encoding types.
 //!
 //! The preferred way to send and receive SOFH-enclosed messages over wire is with
-//! [`TokioCodec`].
+//! `TokioCodec` (available with the `utils-tokio-codec` feature).
 
 #![doc(html_root_url = "https://docs.rs/minisofh/")]
-#![warn(missing_docs, rustdoc::missing_doc_code_examples)]
+#![warn(missing_docs)]
 #![deny(
     unused,
     missing_debug_implementations,
@@ -79,7 +79,7 @@ struct Header {
 impl Header {
     const LENGTH_IN_BYTES: usize = 6;
 
-    fn to_bytes(&self) -> [u8; Self::LENGTH_IN_BYTES] {
+    fn to_bytes(self) -> [u8; Self::LENGTH_IN_BYTES] {
         let mut bytes = [0u8; Self::LENGTH_IN_BYTES];
         let (a, b) = bytes.split_at_mut(4);
         a.copy_from_slice(

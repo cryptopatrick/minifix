@@ -6,6 +6,7 @@ pub struct ResendRequestRange {
 }
 
 impl ResendRequestRange {
+    /// Creates a new resend request range from start to end (inclusive).
     pub fn new(start: usize, end: Option<usize>) -> Self {
         Self { start, end }
     }
