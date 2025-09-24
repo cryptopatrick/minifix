@@ -57,7 +57,7 @@
 
 `minifix` is a high-performance, memory-safe Rust library for parsing, manipulating, and generating FIX (Financial Information Exchange) protocol messages. Designed for speed, safety, and ease of use in financial trading systems, it provides zero-copy parsing, type-safe field access, and comprehensive support for FIX protocol versions 4.0 through 4.4. miniFIX is a derivation of the FerrumFIX crate. Our goal is to create a slimmed-down-bare-essentials version of the original crate. 
 
-> Please note that a lot of the code in miniFIX is drawn from FerrumFIX, and published in accordance with the MIT license (see LICENSE).
+> Please note that a lot of the code in [miniFIX](https://github.com/ferrumfix/ferrumfix) is drawn from FerrumFIX, and published in accordance with the MIT license (see LICENSE).
 
 ### Use Cases
 
