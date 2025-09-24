@@ -9,7 +9,7 @@ use tokio::time::{Instant as TokioInstant, sleep_until};
 ///
 /// This event loop is optimized for Tokio runtime and uses Tokio's native
 /// async primitives for better performance and integration. It provides the
-/// same functionality as [`LlEventLoop`] but with Tokio-specific optimizations.
+/// same functionality as the standard event loop but with Tokio-specific optimizations.
 #[derive(Debug)]
 pub struct TokioLlEventLoop<I> {
     decoder: DecoderStreaming<Vec<u8>>,
