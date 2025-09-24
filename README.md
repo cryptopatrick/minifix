@@ -1,19 +1,19 @@
 <h1 align="center">
   <br>
     <img 
-      src="https://github.com/cryptopatrick/minifix/blob/main/assets/minifix-logo.png" 
-      alt="minifix" 
+      src="https://github.com/cryptopatrick/minifix/blob/main/assets/minifix.png" 
+      alt="miniFIX" 
       width="200"
     />
   <br>
-  MINIFIX
+  miniFIX
   <br>
 </h1>
 
 <h4 align="center">
   A bare essentials library for 
   <a href="https://www.fixtrading.org/" target="_blank">
-    Financial Information Exchange (FIX) protocol</a>
+    Financial Information Exchange (FIX)</a>
 </h4>
 
 <p align="center">
@@ -32,7 +32,7 @@
 </p>
 
 <p align="center">
-  <a href="#-what-is-minifix">What is minifix</a> •
+  <a href="#-what-is-minifix">What is miniFIX</a> •
   <a href="#-features">Features</a> •
   <a href="#-how-to-use">How To Use</a> •
   <a href="#-documentation">Documentation</a> •
@@ -45,7 +45,7 @@
 <details open="open">
   <summary>Table of Contents</summary>
   <ol>
-    <li><a href="#-what-is-minifix"> What is minifix</a></li>
+    <li><a href="#-what-is-minifix"> What is miniFIX</a></li>
     <li><a href="#-features"> Features</a></li>
     <li><a href="#-how-to-use"> How to Use</a></li>
     <li><a href="#-documentation"> Documentation</a></li>
@@ -53,9 +53,11 @@
   </ol>
 </details>
 
-## 🤔 What is minifix
+## 🤔 What is miniFIX
 
-`minifix` is a high-performance, memory-safe Rust library for parsing, manipulating, and generating FIX (Financial Information Exchange) protocol messages. Designed for speed, safety, and ease of use in financial trading systems, it provides zero-copy parsing, type-safe field access, and comprehensive support for FIX protocol versions 4.0 through 4.4.
+`minifix` is a high-performance, memory-safe Rust library for parsing, manipulating, and generating FIX (Financial Information Exchange) protocol messages. Designed for speed, safety, and ease of use in financial trading systems, it provides zero-copy parsing, type-safe field access, and comprehensive support for FIX protocol versions 4.0 through 4.4. miniFIX is a derivation of the FerrumFIX crate. Our goal is to create a slimmed-down-bare-essentials version of the original crate. 
+
+> Please note that a lot of the code in miniFIX is drawn from FerrumFIX, and published in accordance with the MIT license (see LICENSE).
 
 ### Use Cases
 
@@ -67,7 +69,7 @@
 
 ### Architecture
 
-minifix is organized into several focused crates:
+miniFIX is organized into several focused crates:
 
 1. **minifix**: Main library with parsing, encoding, and field type handling
 2. **minifix-dictionary**: FIX protocol specifications and field definitions  
